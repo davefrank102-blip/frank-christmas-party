@@ -5,9 +5,9 @@ export const PARTY = {
   title: "The Frank Family Christmas Eve Party",
   hosts: "The Frank Family",
   // Start/end with explicit Eastern offset (EST = -05:00 in December).
-  start: "2026-12-24T16:00:00-05:00",
+  start: "2026-12-24T17:00:00-05:00",
   end: "2026-12-24T21:00:00-05:00",
-  timeText: "Thursday, December 24 · 4:00 – 9:00 PM",
+  timeText: "Thursday, December 24 · 5:00 – 9:00 PM",
   // >>> ADDRESS: replace "TBD" with the real street address, e.g. "123 Main St, Manasquan, NJ 08736"
   address: "2374 Orchard Crest Blvd, Manasquan, NJ 08736",
   areaText: "Manasquan, NJ",
