@@ -1,9 +1,9 @@
-import { db, withTimeout, mountCountdown, calendarLinks, esc, PARTY, hasAddress } from "./shared.js?v=20261112205844";
-import { DANCES } from "./dances.js?v=20261112205844";
-import { music } from "./music.js?v=20261112205844";
+import { db, withTimeout, mountCountdown, calendarLinks, esc, PARTY, hasAddress } from "./shared.js?v=20261112210138";
+import { DANCES } from "./dances.js?v=20261112210138";
+import { music } from "./music.js?v=20261112210138";
 import { doc, getDoc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 
-const BUILD = "20261112205844"; // set by tools/bump_version.py (cache-busting for JSON + images)
+const BUILD = "20261112210138"; // set by tools/bump_version.py (cache-busting for JSON + images)
 const $ = (s) => document.querySelector(s);
 const params = new URLSearchParams(location.hash.slice(1) || location.search.slice(1));
 const token = (params.get("t") || params.get("g") || "").trim();
@@ -148,7 +148,23 @@ function startDance(el, d) {
   el.dataset.last = d.id; clearTimeout(el._dt);
   el.classList.add("dancing", "d-" + d.id);
   const tag = document.createElement("span"); tag.className = "dance-tag"; tag.textContent = d.label; tag.style.setProperty("--ms", d.ms + "ms"); el.appendChild(tag);
+  placeTag(tag, el);
   el._dt = setTimeout(() => { el.classList.remove("dancing", "d-" + d.id); tag.remove(); }, d.ms + 60);
+}
+/* keep dance-name labels from overlapping each other (all 5 can show at once) and inside the stage.
+   Uses layout boxes (offset*), which ignore the pop-in scale animation. */
+function placeTag(tag, el) {
+  const row = el.parentElement, stage = row.closest(".stage"), W = tag.offsetWidth, H = tag.offsetHeight, gap = 3;
+  const sx = row.offsetLeft, pad = 4, stageW = stage.clientWidth;
+  let x = el.offsetLeft + el.offsetWidth / 2 - W / 2, dx = 0;                     // row coords, before clamping
+  if (sx + x < pad) dx = pad - (sx + x); if (sx + x + W > stageW - pad) dx = stageW - pad - (sx + x + W);
+  x += dx; const y0 = el.offsetTop - 14;
+  const others = [...row.querySelectorAll(".dance-tag")].filter((t) => t !== tag && t._box).map((t) => t._box);
+  const hit = (b) => others.some((o) => b.x < o.x + o.w + gap && o.x < b.x + b.w + gap && b.y < o.y + o.h + gap && o.y < b.y + b.h + gap);
+  let dy = 0;
+  for (const k of [0, 1, -1, 2, -2, 3]) { const b = { x, y: y0 + k * (H + gap), w: W, h: H }; if (!hit(b)) { dy = k * (H + gap); break; } }
+  tag._box = { x, y: y0 + dy, w: W, h: H };
+  tag.style.top = (-14 + dy) + "px"; tag.style.marginLeft = dx + "px";
 }
 function resetDance(el) { clearTimeout(el._dt); DANCES.forEach((x) => el.classList.remove("d-" + x.id)); el.classList.remove("dancing"); el.querySelectorAll(".dance-tag").forEach((t) => t.remove()); }
 /* tap an elf -> a random pop-culture dance (never the same one twice in a row for that elf) + a name bubble */

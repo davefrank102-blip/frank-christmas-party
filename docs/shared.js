@@ -1,4 +1,4 @@
-import { PARTY, FIREBASE, hasAddress } from "./config.js?v=20261112205844";
+import { PARTY, FIREBASE, hasAddress } from "./config.js?v=20261112210138";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
 import { getFirestore } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 
