@@ -1,9 +1,9 @@
-import { db, withTimeout, mountCountdown, calendarLinks, esc, PARTY, hasAddress } from "./shared.js?v=20261112205604";
-import { DANCES } from "./dances.js?v=20261112205604";
-import { music } from "./music.js?v=20261112205604";
+import { db, withTimeout, mountCountdown, calendarLinks, esc, PARTY, hasAddress } from "./shared.js?v=20261112205844";
+import { DANCES } from "./dances.js?v=20261112205844";
+import { music } from "./music.js?v=20261112205844";
 import { doc, getDoc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 
-const BUILD = "20261112205604"; // set by tools/bump_version.py (cache-busting for JSON + images)
+const BUILD = "20261112205844"; // set by tools/bump_version.py (cache-busting for JSON + images)
 const $ = (s) => document.querySelector(s);
 const params = new URLSearchParams(location.hash.slice(1) || location.search.slice(1));
 const token = (params.get("t") || params.get("g") || "").trim();
@@ -144,14 +144,29 @@ const earsSVG = `<svg class="elf-ears" viewBox="0 0 106 30" aria-hidden="true">
 <path d="M86 12 Q100 8 106 0 Q102 16 92 27 Q86 24 86 12 z" style="fill:var(--skin,#f1c27d)"/><path d="M89 14 Q97 11 100 7 Q97 17 92 23 z" fill="rgba(160,70,60,.28)"/></svg>`;
 const MOVES = ["m-bounce", "m-twist", "m-kick", "m-wave"];
 /* tap an elf -> a random pop-culture dance (never the same one twice in a row for that elf) + a name bubble */
+function startDance(el, d) {
+  el.dataset.last = d.id; clearTimeout(el._dt);
+  el.classList.add("dancing", "d-" + d.id);
+  const tag = document.createElement("span"); tag.className = "dance-tag"; tag.textContent = d.label; tag.style.setProperty("--ms", d.ms + "ms"); el.appendChild(tag);
+  el._dt = setTimeout(() => { el.classList.remove("dancing", "d-" + d.id); tag.remove(); }, d.ms + 60);
+}
+function resetDance(el) { clearTimeout(el._dt); DANCES.forEach((x) => el.classList.remove("d-" + x.id)); el.classList.remove("dancing"); el.querySelectorAll(".dance-tag").forEach((t) => t.remove()); }
+/* tap an elf -> a random pop-culture dance (never the same one twice in a row for that elf) + a name bubble */
 function dance(el) {
   const pick = DANCES.filter((d) => d.id !== el.dataset.last); const d = pick[Math.floor(Math.random() * pick.length)];
-  el.dataset.last = d.id; clearTimeout(el._dt);
-  DANCES.forEach((x) => el.classList.remove("d-" + x.id)); el.classList.remove("dancing"); void el.offsetWidth;
-  el.classList.add("dancing", "d-" + d.id);
-  let tag = el.querySelector(".dance-tag"); if (tag) tag.remove();
-  tag = document.createElement("span"); tag.className = "dance-tag"; tag.textContent = d.label; tag.style.setProperty("--ms", d.ms + "ms"); el.appendChild(tag);
-  el._dt = setTimeout(() => { el.classList.remove("dancing", "d-" + d.id); tag.remove(); }, d.ms + 60);
+  resetDance(el); void el.offsetWidth; startDance(el, d);
+}
+/* "New moves": every elf does a different signature dance at the same moment (no duplicates, no repeat of its last one) */
+function groupDance(els) {
+  let plan = null;
+  for (let tries = 0; tries < 50 && !plan; tries++) {
+    const pool = [...DANCES].sort(() => Math.random() - .5), used = new Set(), p = [];
+    for (const el of els) { const d = pool.find((x) => !used.has(x.id) && x.id !== el.dataset.last); if (!d) break; used.add(d.id); p.push(d); }
+    if (p.length === els.length) plan = p;
+  }
+  if (!plan) plan = els.map((_, i) => DANCES[i % DANCES.length]);
+  els.forEach(resetDance); void els[0]?.offsetWidth;          // one reflow, then start everyone in the same frame
+  els.forEach((el, i) => startDance(el, plan[i]));
 }
 (async () => {
   let faces = [];
@@ -167,7 +182,7 @@ function dance(el) {
   const shuffle = () => row.querySelectorAll(".elf").forEach((el, k) => {
     MOVES.forEach((m) => el.classList.remove(m)); el.classList.add(MOVES[Math.floor(Math.random() * MOVES.length)]);
     el.querySelectorAll(".elf-in,.elf-head,.arm,.leg,.fore").forEach((p) => p.style.animationDelay = `${-(k * 0.13)}s`); });
-  shuffle(); $("#newMoves").onclick = shuffle;
+  shuffle(); $("#newMoves").onclick = () => { shuffle(); groupDance([...row.querySelectorAll(".elf")]); };
   $("#discoBtn").onclick = (e) => { const on = $("#stage").classList.toggle("disco-on"); e.currentTarget.textContent = on ? "🌙 Normal lights" : "🪩 Disco mode";
     music.setTrack(on ? "disco" : "xmas"); };
 })();
