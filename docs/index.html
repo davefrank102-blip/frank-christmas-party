@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<title>You're invited! · Frank Family Christmas Eve</title>
+<meta property="og:title" content="You're invited to the Frank Family Christmas Eve Party 🎄">
+<meta property="og:description" content="Thursday, Dec 24 · 4–9 PM. Tap to open your invitation!">
+<meta name="theme-color" content="#0b1a33">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎄</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Mountains+of+Christmas:wght@700&family=Nunito:wght@400;600;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="invite.css">
+</head>
+<body>
+<canvas id="snow" aria-hidden="true"></canvas>
+<div class="lights" aria-hidden="true"></div>
+
+<!-- ============ INTRO ============ -->
+<section id="intro" aria-label="Open your invitation">
+  <div class="intro-inner">
+    <p class="intro-hello" id="introHello">Ho ho ho!</p>
+    <h1 class="intro-title">You've got a special delivery</h1>
+    <button class="gift" id="gift" aria-label="Tap the present to open your invitation">
+      <span class="gift-glow"></span>
+      <span class="gift-lid"><span class="gift-bow"><i></i><i></i></span></span>
+      <span class="gift-box"></span>
+      <span class="gift-tag" id="giftTag">To: You</span>
+    </button>
+    <p class="intro-tap">Tap the present to open ✨</p>
+  </div>
+  <div id="burst" aria-hidden="true"></div>
+</section>
+
+<button id="musicBtn" class="music-btn" aria-pressed="false" title="Play Jingle Bells">🔇 <span>Music</span></button>
+
+<!-- ============ INVITE ============ -->
+<main id="invite" hidden>
+  <header class="hero reveal">
+    <div class="hero-badge">🎅 You're invited 🎄</div>
+    <p class="greet" id="greet"></p>
+    <h1 class="hero-title" id="partyTitle"></h1>
+    <p class="hero-when" id="partyWhen"></p>
+    <p class="hero-where" id="partyWhere"></p>
+    <div class="countdown" id="countdown" aria-live="off"></div>
+    <a href="#rsvp" class="cta">RSVP now ↓</a>
+  </header>
+
+  <section class="card reveal" id="photos">
+    <h2>Christmas at the Franks'</h2>
+    <div class="slideshow" id="slideshow" tabindex="0" aria-roledescription="carousel">
+      <div class="slides" id="slides"></div>
+      <button class="sl-prev" aria-label="Previous photo">‹</button>
+      <button class="sl-next" aria-label="Next photo">›</button>
+      <div class="sl-cap" id="slCap"></div>
+    </div>
+    <div class="sl-dots" id="slDots"></div>
+  </section>
+
+  <section class="card reveal" id="elves">
+    <h2>The Elf Dance-Off 💃🕺</h2>
+    <p class="sub">Look who's been practicing their moves for Christmas Eve…</p>
+    <div class="stage" id="stage">
+      <div class="disco" aria-hidden="true"></div>
+      <div class="elf-row" id="elfRow"></div>
+      <div class="stage-floor" aria-hidden="true"></div>
+    </div>
+    <div class="stage-ctrls">
+      <button class="btn" id="newMoves">🔀 New moves</button>
+      <button class="btn" id="discoBtn">🪩 Disco mode</button>
+    </div>
+    <p class="tiny">Tap an elf to make it show off.</p>
+  </section>
+
+  <section class="card reveal" id="rsvp">
+    <h2>Will you join us?</h2>
+    <p class="sub" id="rsvpBy"></p>
+    <div id="rsvpWrap">
+      <div class="rsvp-current" id="rsvpCurrent" hidden></div>
+      <div class="choice" role="radiogroup" aria-label="RSVP">
+        <button class="ch" data-v="yes" role="radio" aria-checked="false"><span>🎄</span>Yes!</button>
+        <button class="ch" data-v="maybe" role="radio" aria-checked="false"><span>🤔</span>Maybe</button>
+        <button class="ch" data-v="no" role="radio" aria-checked="false"><span>😢</span>Can't make it</button>
+      </div>
+      <div class="counts" id="counts">
+        <div class="stepper"><label>Adults</label><div><button data-s="adults" data-d="-1" aria-label="Fewer adults">−</button><output id="adults">1</output><button data-s="adults" data-d="1" aria-label="More adults">+</button></div></div>
+        <div class="stepper"><label>Kids</label><div><button data-s="kids" data-d="-1" aria-label="Fewer kids">−</button><output id="kids">0</output><button data-s="kids" data-d="1" aria-label="More kids">+</button></div></div>
+      </div>
+      <label class="note-lbl" for="note">Note for the hosts (optional)</label>
+      <textarea id="note" maxlength="500" rows="3" placeholder="Allergies, bringing a dish, can't wait…"></textarea>
+      <button class="btn big" id="saveBtn" disabled>Send my RSVP</button>
+      <div id="saveMsg" class="save-msg" role="status" aria-live="polite" hidden></div>
+    </div>
+    <div id="noToken" class="notice" hidden>To RSVP, please open the personal link from your invitation message.</div>
+  </section>
+
+  <section class="card reveal" id="cal">
+    <h2>Save the date 📅</h2>
+    <div class="cal-btns">
+      <a class="btn" id="gcal" target="_blank" rel="noopener">Google Calendar</a>
+      <a class="btn" id="ics" download="frank-christmas-eve.ics">Apple / Outlook (.ics)</a>
+    </div>
+  </section>
+
+  <footer class="foot">Made with ❤️ and a little elf magic · <span id="footHosts"></span></footer>
+</main>
+
+<script type="module" src="invite.js"></script>
+</body>
+</html>

@@ -1,0 +1,7 @@
+firestore.rules
+.admin_secret
+.firebaserc
+node_modules/
+screenshots/
+tools/faces_src/
+.venv/

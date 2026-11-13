@@ -1,0 +1,58 @@
+rules_version = '2';
+// Frank Christmas Party — Firestore rules.
+// __ADMIN__ is replaced at deploy time with the secret host key (never committed).
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function hostGuestPath(t) {
+      return /databases/$(database)/documents/hosts/__ADMIN__/guests/$(t);
+    }
+    function okCount(v) { return v is int && v >= 0 && v <= 30; }
+    function okName(v) { return v is string && v.size() >= 1 && v.size() <= 80; }
+    function okRsvp(d) {
+      return d.status in ['none', 'yes', 'no', 'maybe']
+        && okCount(d.adults) && okCount(d.kids)
+        && d.note is string && d.note.size() <= 500;
+    }
+
+    // Host-only index of guest households. Path contains the secret key,
+    // so only someone holding the dashboard link can list/edit it.
+    match /hosts/__ADMIN__/guests/{token} {
+      allow read: if true;
+      allow create, update: if token.size() >= 20
+        && request.resource.data.keys().hasOnly(['name', 'createdAt', 'memo'])
+        && okName(request.resource.data.name)
+        && (!('memo' in request.resource.data) || (request.resource.data.memo is string && request.resource.data.memo.size() <= 300));
+      allow delete: if true;
+    }
+
+    // One doc per household, keyed by its unguessable token.
+    // Guests can GET their own doc (by knowing the token) but nobody can LIST.
+    match /invites/{token} {
+      allow get: if token.size() >= 20;
+      allow list: if false;
+
+      // Only creatable together with the host index entry (needs the host key).
+      allow create: if token.size() >= 20
+        && existsAfter(hostGuestPath(token))
+        && request.resource.data.keys().hasOnly(['name', 'status', 'adults', 'kids', 'note', 'createdAt', 'updatedAt', 'openedAt'])
+        && request.resource.data.name == getAfter(hostGuestPath(token)).data.name
+        && okRsvp(request.resource.data);
+
+      // Guests may change only their RSVP fields (+ opened marker).
+      // The name may change only to whatever the host index says.
+      allow update: if request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['status', 'adults', 'kids', 'note', 'updatedAt', 'openedAt', 'name'])
+        && okRsvp(request.resource.data)
+        && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['name'])
+            || request.resource.data.name == getAfter(hostGuestPath(token)).data.name)
+        && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['updatedAt'])
+            || request.resource.data.updatedAt == request.time)
+        && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['openedAt'])
+            || request.resource.data.openedAt == request.time);
+
+      // Only deletable when the host index entry is removed in the same batch.
+      allow delete: if !existsAfter(hostGuestPath(token));
+    }
+  }
+}

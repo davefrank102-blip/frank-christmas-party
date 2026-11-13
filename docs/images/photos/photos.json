@@ -1,0 +1,22 @@
+[
+  {
+    "file": "placeholder-1.jpg",
+    "caption": "Our House",
+    "placeholder": true
+  },
+  {
+    "file": "placeholder-2.jpg",
+    "caption": "The Family",
+    "placeholder": true
+  },
+  {
+    "file": "placeholder-3.jpg",
+    "caption": "Christmas Past",
+    "placeholder": true
+  },
+  {
+    "file": "placeholder-4.jpg",
+    "caption": "The Tree",
+    "placeholder": true
+  }
+]

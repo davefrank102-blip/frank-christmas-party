@@ -1,0 +1,32 @@
+[
+  {
+    "file": "placeholder-dad.png",
+    "name": "Dad",
+    "placeholder": true
+  },
+  {
+    "file": "placeholder-mom.png",
+    "name": "Mom",
+    "placeholder": true
+  },
+  {
+    "file": "placeholder-kiddo.png",
+    "name": "Kiddo",
+    "placeholder": true
+  },
+  {
+    "file": "placeholder-grandma.png",
+    "name": "Grandma",
+    "placeholder": true
+  },
+  {
+    "file": "placeholder-uncle.png",
+    "name": "Uncle",
+    "placeholder": true
+  },
+  {
+    "file": "placeholder-cousin.png",
+    "name": "Cousin",
+    "placeholder": true
+  }
+]

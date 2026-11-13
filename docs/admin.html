@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<title>Party HQ · Frank Christmas Eve</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎅</text></svg>">
+<link href="https://fonts.googleapis.com/css2?family=Mountains+of+Christmas:wght@700&family=Nunito:wght@400;600;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="invite.css">
+<link rel="stylesheet" href="admin.css">
+</head>
+<body class="admin">
+<canvas id="snow" aria-hidden="true"></canvas>
+<div class="lights" aria-hidden="true"></div>
+<main class="hq">
+  <header class="hq-head">
+    <div>
+      <h1>🎅 Party HQ</h1>
+      <p id="hqWhen"></p>
+    </div>
+    <div class="countdown small" id="countdown"></div>
+  </header>
+
+  <div id="locked" class="card" hidden>
+    <h2>Locked 🔒</h2>
+    <p class="sub">This dashboard needs the secret host link (it ends in <code>#k=…</code>). Open the link you were given.</p>
+  </div>
+
+  <div id="hq" hidden>
+    <section class="tiles" id="tiles"></section>
+
+    <section class="grid2">
+      <div class="card"><h3>RSVP breakdown</h3><div id="donut" class="chart"></div></div>
+      <div class="card"><h3>Headcount</h3><div id="bars" class="chart"></div></div>
+    </section>
+
+    <section class="card">
+      <h3>➕ Add a guest household</h3>
+      <form id="addForm" class="add-form" autocomplete="off">
+        <input id="addName" maxlength="80" placeholder='Household name, e.g. "The Smiths"' required>
+        <input id="addMemo" maxlength="300" placeholder="Private memo (optional, only you see it)">
+        <button class="btn" type="submit">Add & make link</button>
+      </form>
+      <div id="addMsg" class="save-msg" hidden></div>
+    </section>
+
+    <section class="card">
+      <div class="list-head">
+        <h3>Guest list</h3>
+        <div class="filters" id="filters">
+          <button data-f="all" class="on">All</button><button data-f="yes">Yes</button><button data-f="maybe">Maybe</button><button data-f="no">No</button><button data-f="none">No reply</button>
+        </div>
+      </div>
+      <div class="table-wrap"><table class="guests"><thead><tr><th>Household</th><th>RSVP</th><th>👨‍👩 Adults</th><th>🧒 Kids</th><th>Note</th><th>Seen</th><th></th></tr></thead><tbody id="rows"></tbody></table></div>
+      <div class="list-foot"><button class="btn ghost" id="csv">⬇ Export CSV</button></div>
+    </section>
+
+    <section class="card">
+      <h3>⏳ Still waiting to hear from</h3>
+      <ul id="waiting" class="waiting"></ul>
+    </section>
+  </div>
+</main>
+<div id="toast" class="toast" hidden></div>
+<script type="module" src="admin.js"></script>
+</body>
+</html>
