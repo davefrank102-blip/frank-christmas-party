@@ -59,7 +59,7 @@ main{position:relative;z-index:10;max-width:760px;margin:0 auto;padding:60px 14p
 .hero{text-align:center;color:#fff;padding:34px 10px 26px}
 .hero-badge{display:inline-block;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);padding:6px 14px;border-radius:999px;font-weight:800;letter-spacing:.5px;font-size:14px}
 .greet{font-size:clamp(18px,4.6vw,22px);margin:18px 0 2px;color:#ffe9a8;font-weight:600}
-.hero-title{font-family:var(--xmas);font-size:clamp(40px,11vw,74px);line-height:1.02;margin:8px 0 14px;
+.hero-title{font-family:var(--xmas);font-size:clamp(40px,11vw,74px);line-height:1.08;margin:8px 0 6px;padding:0 .08em .22em;
 background:linear-gradient(180deg,#fff 20%,#ffe28a 60%,#ffb703);-webkit-background-clip:text;background-clip:text;color:transparent;
 filter:drop-shadow(0 4px 0 rgba(163,18,42,.85)) drop-shadow(0 0 22px rgba(255,210,63,.35))}
 .hero-when{font-size:clamp(18px,5vw,24px);font-weight:800;margin:0}
@@ -104,10 +104,10 @@ background:repeating-conic-gradient(#fff 0 10deg,#9aa7c7 10deg 20deg),#ccc;box-s
 .disco-ball::before{content:"";position:absolute;left:50%;top:-40px;width:2px;height:40px;background:#ccd;margin-left:-1px}
 .stage.disco-on .disco-ball{top:8px}
 .stage.disco-on .elf-row{padding-top:30px}
-.stage.disco-on .elf:not(.showoff) .elf-in{filter:drop-shadow(0 0 10px rgba(255,210,63,.75));animation-duration:.32s!important}
+.stage.disco-on .elf:not(.dancing) .elf-in{filter:drop-shadow(0 0 10px rgba(255,210,63,.75));animation-duration:.32s!important}
 .stage.disco-on .elf:nth-child(3n+1) .elf-in{filter:drop-shadow(0 0 10px rgba(255,77,177,.85))}
 .stage.disco-on .elf:nth-child(3n+2) .elf-in{filter:drop-shadow(0 0 10px rgba(77,200,255,.85))}
-.stage.disco-on .arm,.stage.disco-on .leg,.stage.disco-on .elf-head{animation-duration:.32s!important}
+.stage.disco-on .elf:not(.dancing) .arm,.stage.disco-on .elf:not(.dancing) .leg,.stage.disco-on .elf:not(.dancing) .elf-head{animation-duration:.32s!important}
 .stage.disco-on .stage-floor{background:repeating-linear-gradient(90deg,#ff4d8d 0 25%,#ffd23f 25% 50%,#3ddc84 50% 75%,#4dabff 75% 100%);background-size:200% 100%;animation:floorFlash 1s steps(4) infinite}
 @keyframes ballSpin{to{filter:hue-rotate(360deg) brightness(1.2)}}
 @keyframes floorFlash{to{background-position:-200% 0}}
@@ -120,11 +120,14 @@ background:repeating-conic-gradient(#fff 0 10deg,#9aa7c7 10deg 20deg),#ccc;box-s
 .elf-head img{width:100%;height:100%;border-radius:50%;object-fit:cover;box-shadow:0 0 0 3px #fff,0 4px 8px rgba(0,0,0,.35);background:#fdf3e1}
 .elf-hat{position:absolute;left:-14px;top:-44px;width:106px;height:72px;pointer-events:none}
 .elf-ears{position:absolute;left:-14px;top:30px;width:106px;height:30px;z-index:-1}
-.elf-body{position:absolute;left:50%;top:92px;margin-left:-55px;width:110px;height:150px;overflow:visible}
+.elf-body,.elf-arms{position:absolute;left:50%;top:92px;margin-left:-55px;width:110px;height:150px;overflow:visible}
+.elf-arms{z-index:4;pointer-events:none} /* arms in front of the face so raised arms (YMCA, dab...) stay visible */
 .elf-name{position:absolute;left:50%;bottom:-2px;transform:translateX(-50%);font-size:12px;font-weight:800;color:#123;background:#fff;border-radius:8px;padding:1px 8px;white-space:nowrap;z-index:4}
-.elf svg .arm,.elf svg .leg{transform-box:fill-box}
-.elf svg .arm-l{transform-origin:100% 0}.elf svg .arm-r{transform-origin:0 0}
-.elf svg .leg{transform-origin:50% 0}
+.elf svg .arm,.elf svg .leg,.elf svg .fore{transform-box:view-box;will-change:transform}
+/* explicit pivots in SVG units (shoulders, elbows, hips) so nested rotations never shift the origin */
+.elf svg .arm-l{transform-origin:28px 16px}.elf svg .arm-r{transform-origin:82px 16px}
+.elf svg .arm-l .fore{transform-origin:21px 37px}.elf svg .arm-r .fore{transform-origin:89px 37px}
+.elf svg .leg-l{transform-origin:44.5px 88px}.elf svg .leg-r{transform-origin:65.5px 88px}
 .elf.m-bounce .elf-in{animation:bounce .5s ease-in-out infinite alternate}
 .elf.m-bounce .arm-l{animation:armL .5s ease-in-out infinite alternate}
 .elf.m-bounce .arm-r{animation:armR .5s ease-in-out infinite alternate-reverse}
@@ -145,7 +148,6 @@ background:repeating-conic-gradient(#fff 0 10deg,#9aa7c7 10deg 20deg),#ccc;box-s
 .elf.m-wave .elf-head{animation:tilt 1s ease-in-out infinite alternate}
 .elf.m-wave .leg-l{animation:step 1s ease-in-out infinite alternate}
 .elf.m-wave .leg-r{animation:step 1s ease-in-out infinite alternate-reverse}
-.elf.showoff .elf-in{animation:flip .9s cubic-bezier(.3,.7,.3,1) 1!important}
 @keyframes bounce{from{transform:translateY(0)}to{transform:translateY(-16px)}}
 @keyframes hop{from{transform:translateY(0) rotate(-3deg)}to{transform:translateY(-10px) rotate(3deg)}}
 @keyframes bob{from{transform:rotate(-8deg)}to{transform:rotate(8deg)}}
@@ -154,14 +156,13 @@ background:repeating-conic-gradient(#fff 0 10deg,#9aa7c7 10deg 20deg),#ccc;box-s
 @keyframes sway{from{transform:translateX(-6px) rotate(-4deg)}to{transform:translateX(6px) rotate(4deg)}}
 @keyframes armL{from{transform:rotate(20deg)}to{transform:rotate(-70deg)}}
 @keyframes armR{from{transform:rotate(-20deg)}to{transform:rotate(70deg)}}
-@keyframes armUpL{from{transform:rotate(-110deg)}to{transform:rotate(-160deg)}}
-@keyframes armUpR{from{transform:rotate(110deg)}to{transform:rotate(160deg)}}
-@keyframes waveL{from{transform:rotate(-120deg)}to{transform:rotate(-170deg)}}
+@keyframes armUpL{from{transform:rotate(110deg)}to{transform:rotate(160deg)}}
+@keyframes armUpR{from{transform:rotate(-110deg)}to{transform:rotate(-160deg)}}
+@keyframes waveL{from{transform:rotate(120deg)}to{transform:rotate(165deg)}}
 @keyframes waveR{from{transform:rotate(10deg)}to{transform:rotate(40deg)}}
 @keyframes kickL{0%,100%{transform:rotate(0)}25%{transform:rotate(55deg)}50%{transform:rotate(0)}}
 @keyframes kickR{0%,100%{transform:rotate(0)}50%{transform:rotate(0)}75%{transform:rotate(-55deg)}}
 @keyframes step{from{transform:rotate(-12deg)}to{transform:rotate(12deg)}}
-@keyframes flip{0%{transform:translateY(0)}40%{transform:translateY(-70px) rotate(180deg)}80%{transform:translateY(0) rotate(360deg)}100%{transform:translateY(0) rotate(360deg)}}
 .stage-ctrls{display:flex;gap:10px;justify-content:center;margin-top:14px;flex-wrap:wrap}
 /* ---- buttons & rsvp ---- */
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:0;border-radius:999px;padding:11px 18px;font-weight:800;text-decoration:none;
@@ -200,3 +201,24 @@ html{background:#060d1c}
 .counts{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
 @media (max-width:520px){.elf{zoom:.8}.elf-row{gap:0}}
 #intro.has-photo{background-size:cover;background-position:center}
+
+/* ---- dance name bubble ---- */
+.elf{overflow:visible}
+.elf.dancing{z-index:6}
+.dance-tag{position:absolute;left:50%;top:-14px;z-index:8;white-space:nowrap;pointer-events:none;font-weight:800;font-size:13px;color:#7a1020;
+background:#fff;border:2px solid var(--gold);border-radius:999px;padding:3px 10px;box-shadow:0 4px 12px rgba(0,0,0,.3);
+transform:translateX(-50%);animation:tagPop var(--ms,3000ms) ease both}
+.dance-tag::after{content:"";position:absolute;left:50%;bottom:-7px;margin-left:-6px;border:6px solid transparent;border-top-color:#fff;border-bottom:0}
+@keyframes tagPop{0%{transform:translateX(-50%) scale(.2);opacity:0}8%{transform:translateX(-50%) scale(1.15);opacity:1}14%{transform:translateX(-50%) scale(1)}88%{transform:translateX(-50%) scale(1);opacity:1}100%{transform:translateX(-50%) translateY(-10px) scale(.9);opacity:0}}
+/* ---- keep the floating Music button off the elf hint line ---- */
+.stage-hint{margin:10px 0 2px}
+@media (max-width:640px){
+  .music-btn{width:50px;height:50px;padding:0;display:flex;align-items:center;justify-content:center;font-size:22px}
+  .music-btn[hidden]{display:none}
+  .stage-hint{padding:0 58px}
+  .music-btn span{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+}
+
+/* script font (Mountains of Christmas) has deep descenders: give every heading room so g/y/p are never clipped */
+.intro-hello,.card h2,.greet{line-height:1.2;padding-bottom:.12em}
+.cd-msg{line-height:1.2;padding-bottom:.12em}

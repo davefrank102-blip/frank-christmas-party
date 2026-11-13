@@ -28,3 +28,6 @@ Add / rename / remove households and copy their personal links from the dashboar
 
 ## Publishing changes
 Run `python3 tools/bump_version.py` before every commit/push. It stamps a build id onto every JS/CSS/JSON/image URL (cache-busting) and writes `docs/version.json`; pages that loaded a stale cached copy refresh themselves once.
+
+## Elf dances
+Tap an elf for a random dance. Poses live in `tools/gen_dances.py` (readable pose tables) -> run `python3 tools/gen_dances.py` to regenerate `docs/dances.css` + `docs/dances.js`.

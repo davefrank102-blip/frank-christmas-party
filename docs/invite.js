@@ -1,8 +1,9 @@
-import { db, withTimeout, mountCountdown, calendarLinks, esc, PARTY, hasAddress } from "./shared.js?v=20261112202119";
-import { music } from "./music.js?v=20261112202119";
+import { db, withTimeout, mountCountdown, calendarLinks, esc, PARTY, hasAddress } from "./shared.js?v=20261112203713";
+import { DANCES } from "./dances.js?v=20261112203713";
+import { music } from "./music.js?v=20261112203713";
 import { doc, getDoc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 
-const BUILD = "20261112202119"; // set by tools/bump_version.py (cache-busting for JSON + images)
+const BUILD = "20261112203713"; // set by tools/bump_version.py (cache-busting for JSON + images)
 const $ = (s) => document.querySelector(s);
 const params = new URLSearchParams(location.hash.slice(1) || location.search.slice(1));
 const token = (params.get("t") || params.get("g") || "").trim();
@@ -110,13 +111,18 @@ document.body.insertAdjacentHTML("beforeend", `<svg width="0" height="0" style="
 <pattern id="stripeG" width="16" height="12" patternUnits="userSpaceOnUse"><rect width="16" height="6" fill="#1f7a3a"/><rect y="6" width="16" height="6" fill="#fff"/></pattern>
 </defs></svg>`);
 const tunics = [["#1f9a4a", "#d7263d", "stripeR"], ["#d7263d", "#1f9a4a", "stripeG"], ["#1f9a4a", "#ffd23f", "stripeR"], ["#c21f3a", "#ffffff", "stripeG"]];
+function armsSVG(k) {
+  const [tun, col] = tunics[k % tunics.length];
+  return `<svg class="elf-arms" viewBox="0 0 110 150" aria-hidden="true">
+  <g class="arm arm-l"><rect x="12" y="12" width="18" height="30" rx="9" fill="${tun}"/><g class="fore"><rect x="12" y="32" width="18" height="30" rx="9" fill="${tun}"/><rect x="12" y="50" width="18" height="7" fill="${col}"/><circle cx="21" cy="66" r="8.5" fill="#f1c27d"/></g></g>
+  <g class="arm arm-r"><rect x="80" y="12" width="18" height="30" rx="9" fill="${tun}"/><g class="fore"><rect x="80" y="32" width="18" height="30" rx="9" fill="${tun}"/><rect x="80" y="50" width="18" height="7" fill="${col}"/><circle cx="89" cy="66" r="8.5" fill="#f1c27d"/></g></g>
+</svg>`;
+}
 function elfSVG(k) {
   const [tun, col, stripe] = tunics[k % tunics.length];
   return `<svg class="elf-body" viewBox="0 0 110 150" aria-hidden="true">
   <g class="leg leg-l"><rect x="37" y="86" width="15" height="44" rx="5" fill="url(#${stripe})"/><path d="M34 126 h20 v10 q0 6 -8 6 h-14 q-12 0 -14 -10 q6 4 12 0 z" fill="${tun}"/></g>
   <g class="leg leg-r"><rect x="58" y="86" width="15" height="44" rx="5" fill="url(#${stripe})"/><path d="M56 126 h20 v10 q0 6 8 6 h0 q12 0 14 -10 q-6 4 -12 0 l-2 10 h-28 z" fill="${tun}"/></g>
-  <g class="arm arm-l"><rect x="12" y="12" width="18" height="50" rx="9" fill="${tun}"/><rect x="12" y="50" width="18" height="7" fill="${col}"/><circle cx="21" cy="66" r="8.5" fill="#f1c27d"/></g>
-  <g class="arm arm-r"><rect x="80" y="12" width="18" height="50" rx="9" fill="${tun}"/><rect x="80" y="50" width="18" height="7" fill="${col}"/><circle cx="89" cy="66" r="8.5" fill="#f1c27d"/></g>
   <path d="M30 8 h50 l12 84 l-9 -7 l-7 8 l-7 -8 l-7 8 l-7 -8 l-7 8 l-7 -8 l-7 8 l-7 -8 l-9 7 z" fill="${tun}"/>
   <rect x="25" y="58" width="60" height="10" fill="#2a1a12"/><rect x="48" y="56" width="14" height="14" rx="2" fill="none" stroke="#ffd23f" stroke-width="3"/>
   <circle cx="55" cy="30" r="3" fill="#ffd23f"/><circle cx="55" cy="44" r="3" fill="#ffd23f"/>
@@ -127,21 +133,30 @@ const hatSVG = (k) => { const [tun, col] = tunics[k % tunics.length]; const hat 
   return `<svg class="elf-hat" viewBox="0 0 106 72" aria-hidden="true"><path d="M14 54 Q34 8 84 6 Q70 22 92 52 z" fill="${hat}"/><circle cx="86" cy="7" r="8" fill="#fff"/><rect x="8" y="48" width="90" height="16" rx="8" fill="#fff"/><circle cx="20" cy="56" r="2" fill="#ffd23f"/><circle cx="53" cy="56" r="2" fill="${tun}"/><circle cx="86" cy="56" r="2" fill="#ffd23f"/></svg>`; };
 const earsSVG = `<svg class="elf-ears" viewBox="0 0 106 30" aria-hidden="true"><path d="M18 18 L0 2 L14 28 z" fill="#f1c27d"/><path d="M88 18 L106 2 L92 28 z" fill="#f1c27d"/></svg>`;
 const MOVES = ["m-bounce", "m-twist", "m-kick", "m-wave"];
+/* tap an elf -> a random pop-culture dance (never the same one twice in a row for that elf) + a name bubble */
+function dance(el) {
+  const pick = DANCES.filter((d) => d.id !== el.dataset.last); const d = pick[Math.floor(Math.random() * pick.length)];
+  el.dataset.last = d.id; clearTimeout(el._dt);
+  DANCES.forEach((x) => el.classList.remove("d-" + x.id)); el.classList.remove("dancing"); void el.offsetWidth;
+  el.classList.add("dancing", "d-" + d.id);
+  let tag = el.querySelector(".dance-tag"); if (tag) tag.remove();
+  tag = document.createElement("span"); tag.className = "dance-tag"; tag.textContent = d.label; tag.style.setProperty("--ms", d.ms + "ms"); el.appendChild(tag);
+  el._dt = setTimeout(() => { el.classList.remove("dancing", "d-" + d.id); tag.remove(); }, d.ms + 60);
+}
 (async () => {
   let faces = [];
   try { faces = await (await fetch(`images/faces/faces.json?v=${BUILD}`, { cache: "no-cache" })).json(); } catch {}
   if (!faces.length) faces = [{ file: "", name: "Elf" }];
   const row = $("#elfRow");
   faces.slice(0, 12).forEach((f, k) => {
-    const b = document.createElement("button"); b.className = "elf"; b.setAttribute("aria-label", `${f.name} the elf — tap to show off`);
-    b.innerHTML = `<div class="elf-in">${elfSVG(k)}<div class="elf-head">${earsSVG}<img src="images/faces/${encodeURI(f.file)}?v=${BUILD}" alt="">${hatSVG(k)}</div></div><span class="elf-name">${esc(f.name)}</span>`;
-    b.addEventListener("click", () => { b.classList.remove("showoff"); void b.offsetWidth; b.classList.add("showoff");
-      const host = b.querySelector(".elf-in"); host.addEventListener("animationend", () => b.classList.remove("showoff"), { once: true }); });
+    const b = document.createElement("button"); b.className = "elf"; b.setAttribute("aria-label", `${f.name} the elf — tap for a dance`);
+    b.innerHTML = `<div class="elf-in">${elfSVG(k)}<div class="elf-head">${earsSVG}<img src="images/faces/${encodeURI(f.file)}?v=${BUILD}" alt="">${hatSVG(k)}</div>${armsSVG(k)}</div><span class="elf-name">${esc(f.name)}</span>`;
+    b.addEventListener("click", () => dance(b));
     row.appendChild(b);
   });
   const shuffle = () => row.querySelectorAll(".elf").forEach((el, k) => {
     MOVES.forEach((m) => el.classList.remove(m)); el.classList.add(MOVES[Math.floor(Math.random() * MOVES.length)]);
-    el.querySelectorAll(".elf-in,.elf-head,.arm,.leg").forEach((p) => p.style.animationDelay = `${-(k * 0.13)}s`); });
+    el.querySelectorAll(".elf-in,.elf-head,.arm,.leg,.fore").forEach((p) => p.style.animationDelay = `${-(k * 0.13)}s`); });
   shuffle(); $("#newMoves").onclick = shuffle;
   $("#discoBtn").onclick = (e) => { const on = $("#stage").classList.toggle("disco-on"); e.currentTarget.textContent = on ? "🌙 Normal lights" : "🪩 Disco mode"; };
 })();
