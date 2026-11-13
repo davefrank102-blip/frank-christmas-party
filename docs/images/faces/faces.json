@@ -1,22 +1,32 @@
 [
   {
-    "file": "dylan.png",
-    "name": "Dylan"
+    "file": "dylan.webp",
+    "name": "Dylan",
+    "skin": "#e6b392",
+    "cutout": true
   },
   {
-    "file": "david.png",
-    "name": "David"
+    "file": "david.webp",
+    "name": "David",
+    "skin": "#c2947b",
+    "cutout": true
   },
   {
-    "file": "juliette.png",
-    "name": "Juliette"
+    "file": "juliette.webp",
+    "name": "Juliette",
+    "skin": "#e2b194",
+    "cutout": true
   },
   {
-    "file": "brielle.png",
-    "name": "Brielle"
+    "file": "brielle.webp",
+    "name": "Brielle",
+    "skin": "#dca789",
+    "cutout": true
   },
   {
-    "file": "krissy.png",
-    "name": "Krissy"
+    "file": "krissy.webp",
+    "name": "Krissy",
+    "skin": "#e4ad91",
+    "cutout": true
   }
 ]

@@ -234,3 +234,13 @@ transition:opacity .45s,visibility .45s;animation:cueBounce 1.4s ease-in-out inf
 .scroll-cue.gone{opacity:0;visibility:hidden;pointer-events:none}
 @keyframes cueBounce{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(9px)}}
 @keyframes cueFade{0%,100%{opacity:.35}50%{opacity:1}}
+
+/* ---- JibJab-style face cut-outs (faces.json "cutout": true) ----
+   cut-out canvas is 300x390 with forehead at y=118 and chin at y=362 (see tools/make_faces.py) */
+.elf-cut .elf-head{width:92px;height:120px;margin-left:-46px;top:-11px;transform-origin:50% 92%}
+.elf-cut .elf-head img{border-radius:0;box-shadow:none;background:none;object-fit:contain;filter:drop-shadow(0 2px 2px rgba(0,0,0,.28))}
+.elf-cut .elf-hat{left:-3px;top:-15px;width:98px;height:66px;z-index:2}
+.elf-cut .elf-ears{left:3px;top:46px;width:86px;height:26px}
+.elf-cut .elf-head{z-index:3}
+.elf:not(.elf-cut) .neck,.elf:not(.elf-cut) .neck+rect{display:none}
+.elf-row{padding-top:12px}

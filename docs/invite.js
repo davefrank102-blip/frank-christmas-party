@@ -1,9 +1,9 @@
-import { db, withTimeout, mountCountdown, calendarLinks, esc, PARTY, hasAddress } from "./shared.js?v=20261112204044";
-import { DANCES } from "./dances.js?v=20261112204044";
-import { music } from "./music.js?v=20261112204044";
+import { db, withTimeout, mountCountdown, calendarLinks, esc, PARTY, hasAddress } from "./shared.js?v=20261112205307";
+import { DANCES } from "./dances.js?v=20261112205307";
+import { music } from "./music.js?v=20261112205307";
 import { doc, getDoc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 
-const BUILD = "20261112204044"; // set by tools/bump_version.py (cache-busting for JSON + images)
+const BUILD = "20261112205307"; // set by tools/bump_version.py (cache-busting for JSON + images)
 const $ = (s) => document.querySelector(s);
 const params = new URLSearchParams(location.hash.slice(1) || location.search.slice(1));
 const token = (params.get("t") || params.get("g") || "").trim();
@@ -121,13 +121,14 @@ const tunics = [["#1f9a4a", "#d7263d", "stripeR"], ["#d7263d", "#1f9a4a", "strip
 function armsSVG(k) {
   const [tun, col] = tunics[k % tunics.length];
   return `<svg class="elf-arms" viewBox="0 0 110 150" aria-hidden="true">
-  <g class="arm arm-l"><rect x="12" y="12" width="18" height="30" rx="9" fill="${tun}"/><g class="fore"><rect x="12" y="32" width="18" height="30" rx="9" fill="${tun}"/><rect x="12" y="50" width="18" height="7" fill="${col}"/><circle cx="21" cy="66" r="8.5" fill="#f1c27d"/></g></g>
-  <g class="arm arm-r"><rect x="80" y="12" width="18" height="30" rx="9" fill="${tun}"/><g class="fore"><rect x="80" y="32" width="18" height="30" rx="9" fill="${tun}"/><rect x="80" y="50" width="18" height="7" fill="${col}"/><circle cx="89" cy="66" r="8.5" fill="#f1c27d"/></g></g>
+  <g class="arm arm-l"><rect x="12" y="12" width="18" height="30" rx="9" fill="${tun}"/><g class="fore"><rect x="12" y="32" width="18" height="30" rx="9" fill="${tun}"/><rect x="12" y="50" width="18" height="7" fill="${col}"/><circle cx="21" cy="66" r="8.5" style="fill:var(--skin,#f1c27d)"/></g></g>
+  <g class="arm arm-r"><rect x="80" y="12" width="18" height="30" rx="9" fill="${tun}"/><g class="fore"><rect x="80" y="32" width="18" height="30" rx="9" fill="${tun}"/><rect x="80" y="50" width="18" height="7" fill="${col}"/><circle cx="89" cy="66" r="8.5" style="fill:var(--skin,#f1c27d)"/></g></g>
 </svg>`;
 }
 function elfSVG(k) {
   const [tun, col, stripe] = tunics[k % tunics.length];
   return `<svg class="elf-body" viewBox="0 0 110 150" aria-hidden="true">
+  <rect class="neck" x="44" y="-10" width="22" height="24" rx="8" style="fill:var(--skin,#f1c27d)"/><rect x="44" y="-2" width="22" height="8" fill="rgba(90,40,30,.18)"/>
   <g class="leg leg-l"><rect x="37" y="86" width="15" height="44" rx="5" fill="url(#${stripe})"/><path d="M34 126 h20 v10 q0 6 -8 6 h-14 q-12 0 -14 -10 q6 4 12 0 z" fill="${tun}"/></g>
   <g class="leg leg-r"><rect x="58" y="86" width="15" height="44" rx="5" fill="url(#${stripe})"/><path d="M56 126 h20 v10 q0 6 8 6 h0 q12 0 14 -10 q-6 4 -12 0 l-2 10 h-28 z" fill="${tun}"/></g>
   <path d="M30 8 h50 l12 84 l-9 -7 l-7 8 l-7 -8 l-7 8 l-7 -8 l-7 8 l-7 -8 l-7 8 l-7 -8 l-9 7 z" fill="${tun}"/>
@@ -138,7 +139,9 @@ function elfSVG(k) {
 }
 const hatSVG = (k) => { const [tun, col] = tunics[k % tunics.length]; const hat = k % 2 ? "#1f9a4a" : "#d7263d";
   return `<svg class="elf-hat" viewBox="0 0 106 72" aria-hidden="true"><path d="M14 54 Q34 8 84 6 Q70 22 92 52 z" fill="${hat}"/><circle cx="86" cy="7" r="8" fill="#fff"/><rect x="8" y="48" width="90" height="16" rx="8" fill="#fff"/><circle cx="20" cy="56" r="2" fill="#ffd23f"/><circle cx="53" cy="56" r="2" fill="${tun}"/><circle cx="86" cy="56" r="2" fill="#ffd23f"/></svg>`; };
-const earsSVG = `<svg class="elf-ears" viewBox="0 0 106 30" aria-hidden="true"><path d="M18 18 L0 2 L14 28 z" fill="#f1c27d"/><path d="M88 18 L106 2 L92 28 z" fill="#f1c27d"/></svg>`;
+const earsSVG = `<svg class="elf-ears" viewBox="0 0 106 30" aria-hidden="true">
+<path d="M20 12 Q6 8 0 0 Q4 16 14 27 Q20 24 20 12 z" style="fill:var(--skin,#f1c27d)"/><path d="M17 14 Q9 11 6 7 Q9 17 14 23 z" fill="rgba(160,70,60,.28)"/>
+<path d="M86 12 Q100 8 106 0 Q102 16 92 27 Q86 24 86 12 z" style="fill:var(--skin,#f1c27d)"/><path d="M89 14 Q97 11 100 7 Q97 17 92 23 z" fill="rgba(160,70,60,.28)"/></svg>`;
 const MOVES = ["m-bounce", "m-twist", "m-kick", "m-wave"];
 /* tap an elf -> a random pop-culture dance (never the same one twice in a row for that elf) + a name bubble */
 function dance(el) {
@@ -156,7 +159,7 @@ function dance(el) {
   if (!faces.length) faces = [{ file: "", name: "Elf" }];
   const row = $("#elfRow");
   faces.slice(0, 12).forEach((f, k) => {
-    const b = document.createElement("button"); b.className = "elf"; b.setAttribute("aria-label", `${f.name} the elf — tap for a dance`);
+    const b = document.createElement("button"); b.className = "elf" + (f.cutout ? " elf-cut" : ""); if (f.skin) b.style.setProperty("--skin", f.skin); b.setAttribute("aria-label", `${f.name} the elf — tap for a dance`);
     b.innerHTML = `<div class="elf-in">${elfSVG(k)}<div class="elf-head">${earsSVG}<img src="images/faces/${encodeURI(f.file)}?v=${BUILD}" alt="">${hatSVG(k)}</div>${armsSVG(k)}</div><span class="elf-name">${esc(f.name)}</span>`;
     b.addEventListener("click", () => dance(b));
     row.appendChild(b);
