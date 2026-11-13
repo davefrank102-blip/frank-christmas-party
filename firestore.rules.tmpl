@@ -17,12 +17,31 @@ service cloud.firestore {
 
     // Host-only index of guest households. Path contains the secret key,
     // so only someone holding the dashboard link can list/edit it.
+    // Guest email addresses live ONLY here (never in invites/{token}), so guests can't see each other's.
+    function okEmail(l, i) {
+      return l.size() <= i || (l[i] is string && l[i].size() <= 254 && l[i].matches('[^@\\s]+@[^@\\s]+[.][^@\\s]+'));
+    }
+    function okEmails(l) {
+      return l is list && l.size() <= 10
+        && okEmail(l, 0) && okEmail(l, 1) && okEmail(l, 2) && okEmail(l, 3) && okEmail(l, 4)
+        && okEmail(l, 5) && okEmail(l, 6) && okEmail(l, 7) && okEmail(l, 8) && okEmail(l, 9);
+    }
+    function okHost(d) {
+      return d.keys().hasOnly(['name', 'createdAt', 'memo', 'emails', 'emailedAt', 'emailedVia'])
+        && okName(d.name)
+        && (!('memo' in d) || (d.memo is string && d.memo.size() <= 300))
+        && (!('emails' in d) || okEmails(d.emails))
+        && (!('emailedAt' in d) || d.emailedAt is timestamp)
+        && (!('emailedVia' in d) || d.emailedVia in ['copy', 'eml']);
+    }
     match /hosts/__ADMIN__/guests/{token} {
       allow read: if true;
-      allow create, update: if token.size() >= 20
-        && request.resource.data.keys().hasOnly(['name', 'createdAt', 'memo'])
-        && okName(request.resource.data.name)
-        && (!('memo' in request.resource.data) || (request.resource.data.memo is string && request.resource.data.memo.size() <= 300));
+      allow create: if token.size() >= 20 && okHost(request.resource.data)
+        && !('emailedAt' in request.resource.data);
+      allow update: if token.size() >= 20 && okHost(request.resource.data)
+        && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['emailedAt'])
+            || !('emailedAt' in request.resource.data)
+            || request.resource.data.emailedAt == request.time);
       allow delete: if true;
     }
 

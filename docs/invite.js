@@ -1,9 +1,9 @@
-import { db, withTimeout, mountCountdown, calendarLinks, esc, PARTY, hasAddress } from "./shared.js?v=20261112210354";
-import { DANCES } from "./dances.js?v=20261112210354";
-import { music } from "./music.js?v=20261112210354";
+import { db, withTimeout, mountCountdown, calendarLinks, esc, PARTY, hasAddress } from "./shared.js?v=20261113082643";
+import { DANCES } from "./dances.js?v=20261113082643";
+import { music } from "./music.js?v=20261113082643";
 import { doc, getDoc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 
-const BUILD = "20261112210354"; // set by tools/bump_version.py (cache-busting for JSON + images)
+const BUILD = "20261113082643"; // set by tools/bump_version.py (cache-busting for JSON + images)
 const $ = (s) => document.querySelector(s);
 const params = new URLSearchParams(location.hash.slice(1) || location.search.slice(1));
 const token = (params.get("t") || params.get("g") || "").trim();

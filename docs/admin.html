@@ -8,8 +8,8 @@
 <title>Party HQ · Frank Christmas Eve</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎅</text></svg>">
 <link href="https://fonts.googleapis.com/css2?family=Mountains+of+Christmas:wght@700&family=Nunito:wght@400;600;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="invite.css?v=20261112210354">
-<link rel="stylesheet" href="admin.css?v=20261112210354">
+<link rel="stylesheet" href="invite.css?v=20261113082643">
+<link rel="stylesheet" href="admin.css?v=20261113082643">
 
 
 
@@ -27,7 +27,11 @@
 
 
 
-<script id="buildcheck">window.BUILD="20261112210354";fetch("version.json?"+Date.now(),{cache:"no-store"}).then(r=>r.json()).then(j=>{if(j.v!==window.BUILD&&sessionStorage.getItem("xmas-reloaded")!==j.v){sessionStorage.setItem("xmas-reloaded",j.v);return fetch(location.pathname,{cache:"reload"}).then(()=>location.reload())}}).catch(()=>{})</script>
+
+
+
+
+<script id="buildcheck">window.BUILD="20261113082643";fetch("version.json?"+Date.now(),{cache:"no-store"}).then(r=>r.json()).then(j=>{if(j.v!==window.BUILD&&sessionStorage.getItem("xmas-reloaded")!==j.v){sessionStorage.setItem("xmas-reloaded",j.v);return fetch(location.pathname,{cache:"reload"}).then(()=>location.reload())}}).catch(()=>{})</script>
 </head>
 <body class="admin">
 <canvas id="snow" aria-hidden="true"></canvas>
@@ -58,10 +62,20 @@
       <h3>➕ Add a guest household</h3>
       <form id="addForm" class="add-form" autocomplete="off">
         <input id="addName" maxlength="80" placeholder='Household name, e.g. "The Smiths"' required>
+        <textarea id="addEmails" rows="1" maxlength="2000" inputmode="email" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="Emails: john@x.com, jane@y.com"></textarea>
         <input id="addMemo" maxlength="300" placeholder="Private memo (optional, only you see it)">
         <button class="btn" type="submit">Add & make link</button>
       </form>
+      <div id="addEmailsHint" class="email-hint" hidden></div>
       <div id="addMsg" class="save-msg" hidden></div>
+      <details class="bulk" id="bulk">
+        <summary>📋 Add many at once</summary>
+        <p class="sub">One household per line. Emails are optional — separate several with commas, spaces or semicolons.</p>
+        <textarea id="bulkText" rows="6" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="The Smiths: john@x.com, jane@y.com&#10;Aunt Carol &amp; Bob: carol@z.com&#10;The Garcias"></textarea>
+        <div id="bulkPreview" class="bulk-preview"></div>
+        <button class="btn" type="button" id="bulkAdd" disabled>Add households</button>
+        <div id="bulkMsg" class="save-msg" hidden></div>
+      </details>
     </section>
 
     <section class="card">
@@ -71,8 +85,8 @@
           <button data-f="all" class="on">All</button><button data-f="yes">Yes</button><button data-f="maybe">Maybe</button><button data-f="no">No</button><button data-f="none">No reply</button>
         </div>
       </div>
-      <div class="table-wrap"><table class="guests"><thead><tr><th>Household</th><th>RSVP</th><th>👨‍👩 Adults</th><th>🧒 Kids</th><th>Note</th><th>Seen</th><th></th></tr></thead><tbody id="rows"></tbody></table></div>
-      <div class="list-foot"><button class="btn ghost" id="csv">⬇ Export CSV</button></div>
+      <div class="table-wrap"><table class="guests"><thead><tr><th>Household</th><th>RSVP</th><th>👨‍👩 Adults</th><th>🧒 Kids</th><th>Note</th><th>Seen</th><th>Emailed</th><th></th></tr></thead><tbody id="rows"></tbody></table></div>
+      <div class="list-foot"><button class="btn ghost" id="emailAll">✉️ Email all not-yet-emailed</button> <button class="btn ghost" id="csv">⬇ Export CSV</button></div>
     </section>
 
     <section class="card">
@@ -81,7 +95,22 @@
     </section>
   </div>
 </main>
+<div id="queue" class="queue" hidden>
+  <div class="q-txt"><small id="qCount"></small><b id="qName"></b><span id="qTo"></span></div>
+  <div class="q-btns"><button class="btn" id="qGo">✉️ Email invite</button><button class="btn ghost" id="qEml">⬇ .eml</button><button class="btn ghost" id="qSkip">Skip</button><button class="btn ghost" id="qStop">✕</button></div>
+</div>
+<dialog id="editDlg" class="edit-dlg">
+  <form method="dialog" id="editForm">
+    <h3>✏️ Edit household</h3>
+    <label>Household name<input id="edName" maxlength="80" required></label>
+    <label>Emails <small>(comma, space or new line between them)</small><textarea id="edEmails" rows="3" maxlength="2000" inputmode="email" autocapitalize="off" autocorrect="off" spellcheck="false"></textarea></label>
+    <div id="edHint" class="email-hint" hidden></div>
+    <label>Private memo<input id="edMemo" maxlength="300"></label>
+    <label class="chk" id="edResetWrap" hidden><input type="checkbox" id="edReset"> Mark as not emailed yet</label>
+    <div class="dlg-btns"><button class="btn ghost" value="cancel" formnovalidate>Cancel</button><button class="btn" value="save" id="edSave">Save</button></div>
+  </form>
+</dialog>
 <div id="toast" class="toast" hidden></div>
-<script type="module" src="admin.js?v=20261112210354"></script>
+<script type="module" src="admin.js?v=20261113082643"></script>
 </body>
 </html>

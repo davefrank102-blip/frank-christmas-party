@@ -1,5 +1,6 @@
-import { db, withTimeout, mountCountdown, esc, PARTY } from "./shared.js?v=20261112210354";
-import { collection, doc, onSnapshot, writeBatch, serverTimestamp, getDocs } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+import { db, withTimeout, mountCountdown, esc, PARTY } from "./shared.js?v=20261113082643";
+import { collection, doc, onSnapshot, writeBatch, serverTimestamp, getDocs, updateDoc, deleteField } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+import { parseEmails, parseBulkLine, MAX_EMAILS, emailHtml, emailText, mailtoUrl, copyRich, buildEml } from "./email.js?v=20261113082643";
 
 const $ = (s) => document.querySelector(s);
 const KEY = new URLSearchParams(location.hash.slice(1)).get("k") || "";
@@ -15,7 +16,7 @@ $(".lights").innerHTML = "<i></i>".repeat(Math.ceil(innerWidth / 44));
 $("#hqWhen").textContent = `${PARTY.timeText} · ${PARTY.title}`;
 mountCountdown($("#countdown"));
 
-const toast = (t) => { const el = $("#toast"); el.textContent = t; el.hidden = false; clearTimeout(toast.t); toast.t = setTimeout(() => el.hidden = true, 2200); };
+const toast = (t, ms = 2200) => { const el = $("#toast"); el.textContent = t; el.hidden = false; clearTimeout(toast.t); toast.t = setTimeout(() => el.hidden = true, ms); };
 const copy = async (text, label = "Copied!") => { try { await navigator.clipboard.writeText(text); toast(label); } catch { prompt("Copy this:", text); } };
 function newToken(n = 24) {
   const a = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"; let out = "";
@@ -23,7 +24,7 @@ function newToken(n = 24) {
   return out;
 }
 
-const guests = new Map();   // token -> {name, memo, createdAt}
+const guests = new Map();   // token -> {name, memo, emails, emailedAt, emailedVia, createdAt}
 const invites = new Map();  // token -> invite doc data
 const unsub = new Map();
 let filter = "all";
@@ -68,13 +69,14 @@ function render() {
   const list = rs.filter((r) => filter === "all" || (r.status && r.status !== "none" ? r.status : "none") === filter);
   $("#rows").innerHTML = list.length ? list.map((r) => { const s = r.status && r.status !== "none" ? r.status : "none";
     return `<tr data-t="${r.t}">
-      <td><b>${esc(r.name)}</b>${isTest(r.name) ? '<span class="test">TEST</span>' : ""}${r.memo ? `<span class="memo">${esc(r.memo)}</span>` : ""}</td>
-      <td><span class="pill ${s}">${label[s]}</span>${r.updatedAt ? `<span class="memo">${esc(fmt(r.updatedAt))}</span>` : ""}</td>
-      <td class="num">${s === "yes" || s === "maybe" ? r.adults ?? 0 : "–"}</td><td class="num">${s === "yes" || s === "maybe" ? r.kids ?? 0 : "–"}</td>
-      <td class="note">${esc(r.note || "")}</td>
-      <td>${r.openedAt ? `👀 <span class="memo">${esc(fmt(r.openedAt))}</span>` : '<span class="memo">not yet</span>'}</td>
-      <td class="acts"><button class="copy" data-a="copy">🔗 Copy link</button><button data-a="msg" title="Copy a ready-to-paste invite message">✉️</button><button data-a="open" title="Preview invite">👁</button><button data-a="edit" title="Rename">✏️</button><button class="del" data-a="del" title="Remove">🗑</button></td></tr>`; }).join("")
-    : `<tr><td colspan="7" style="text-align:center;color:#8a6a5a;padding:20px">${guests.size ? "Nobody in this group yet." : "No guests yet — add your first household above! 🎄"}</td></tr>`;
+      <td><b>${esc(r.name)}</b>${isTest(r.name) ? '<span class="test">TEST</span>' : ""}${r.emails?.length ? `<span class="emails">${r.emails.map(esc).join(", ")}</span>` : '<span class="noemail">no email yet</span>'}${r.memo ? `<span class="memo">${esc(r.memo)}</span>` : ""}</td>
+      <td data-l="RSVP"><span class="pill ${s}">${label[s]}</span>${r.updatedAt ? `<span class="memo">${esc(fmt(r.updatedAt))}</span>` : ""}</td>
+      <td class="num" data-l="Adults">${s === "yes" || s === "maybe" ? r.adults ?? 0 : "–"}</td><td class="num" data-l="Kids">${s === "yes" || s === "maybe" ? r.kids ?? 0 : "–"}</td>
+      <td class="note" data-l="Note">${esc(r.note || "")}</td>
+      <td data-l="Seen">${r.openedAt ? `👀 <span class="memo">${esc(fmt(r.openedAt))}</span>` : '<span class="memo">not yet</span>'}</td>
+      <td class="mailed" data-l="Emailed">${r.emailedAt ? `✅ <span class="memo">${esc(fmt(r.emailedAt))}${r.emailedVia === "eml" ? " · .eml" : ""}</span>` : '<span class="memo">not yet</span>'}</td>
+      <td class="acts"><button class="mail" data-a="mail" title="Copy the picture invite + open a new e-mail">✉️ Email invite</button><button data-a="eml" title="Download a draft e-mail (.eml) with the picture inside — opens in Outlook / Apple Mail">⬇ .eml</button><button class="copy" data-a="copy">🔗 Copy link</button><button data-a="msg" title="Copy a text-message invite">💬</button><button data-a="open" title="Preview invite">👁</button><button data-a="edit" title="Edit name, emails, memo">✏️</button><button class="del" data-a="del" title="Remove">🗑</button></td></tr>`; }).join("")
+    : `<tr><td colspan="8" style="text-align:center;color:#8a6a5a;padding:20px">${guests.size ? "Nobody in this group yet." : "No guests yet — add your first household above! 🎄"}</td></tr>`;
   const waiting = rs.filter((r) => !r.status || r.status === "none");
   $("#waiting").innerHTML = waiting.length ? waiting.map((r) => `<li>${esc(r.name)} ${r.openedAt ? "<small>(opened 👀)</small>" : "<small>(not opened)</small>"}</li>`).join("") : "<li>Everyone has answered! 🎉</li>";
 }
@@ -105,15 +107,16 @@ $("#filters").addEventListener("click", (e) => { const b = e.target.closest("but
 
 $("#addForm").addEventListener("submit", async (e) => {
   e.preventDefault(); const name = $("#addName").value.trim(), memo = $("#addMemo").value.trim(); if (!name) return;
+  const pe = checkEmails($("#addEmails").value, $("#addEmailsHint")); if (!pe) return;
   const t = newToken(), m = $("#addMsg"); m.hidden = false; m.className = "save-msg busy"; m.textContent = "⏳ Adding…";
   const b = writeBatch(db);
-  const g = { name, createdAt: serverTimestamp() }; if (memo) g.memo = memo;
+  const g = { name, createdAt: serverTimestamp() }; if (memo) g.memo = memo; if (pe.length) g.emails = pe;
   b.set(doc(db, "hosts", KEY, "guests", t), g);
   b.set(doc(db, "invites", t), { name, status: "none", adults: 0, kids: 0, note: "", createdAt: serverTimestamp() });
   try { await withTimeout(b.commit(), 10000);
     m.className = "save-msg ok"; m.innerHTML = `<div style="width:100%">✅ Added <b>${esc(name)}</b>. Their personal link:<div class="linkbox"><input readonly value="${linkFor(t)}"><button class="btn" type="button" id="cpNew">Copy</button></div></div>`;
     $("#cpNew").onclick = () => copy(linkFor(t), "Link copied");
-    $("#addName").value = ""; $("#addMemo").value = "";
+    $("#addName").value = ""; $("#addMemo").value = ""; $("#addEmails").value = ""; $("#addEmailsHint").hidden = true;
   } catch (err) { console.error(err); m.className = "save-msg err"; m.textContent = "❌ Couldn't add the guest — check your connection and try again."; }
 });
 
@@ -122,14 +125,9 @@ $("#rows").addEventListener("click", async (e) => {
   if (b.dataset.a === "copy") copy(linkFor(t), "Link copied 🔗");
   if (b.dataset.a === "open") window.open(linkFor(t) + "&intro", "_blank", "noopener");
   if (b.dataset.a === "msg") copy(`🎄 You're invited to ${PARTY.title}! ${PARTY.timeText}. Open your invitation & RSVP here: ${linkFor(t)}`, "Invite message copied ✉️");
-  if (b.dataset.a === "edit") {
-    const name = prompt("Household name:", g.name)?.trim(); if (!name || name === g.name) return;
-    const memo = prompt("Private memo (optional):", g.memo || "");
-    const batch = writeBatch(db);
-    const ng = { name, createdAt: g.createdAt || serverTimestamp() }; if (memo && memo.trim()) ng.memo = memo.trim().slice(0, 300);
-    batch.set(doc(db, "hosts", KEY, "guests", t), ng); batch.update(doc(db, "invites", t), { name });
-    try { await withTimeout(batch.commit()); toast("Saved ✏️"); } catch (err) { console.error(err); alert("Couldn't save the change. Check your connection."); }
-  }
+  if (b.dataset.a === "edit") openEdit(t);
+  if (b.dataset.a === "mail") emailInvite(t);
+  if (b.dataset.a === "eml") downloadEml(t);
   if (b.dataset.a === "del") {
     if (!confirm(`Remove ${g.name}? Their link will stop working and their RSVP is deleted.`)) return;
     const batch = writeBatch(db); batch.delete(doc(db, "hosts", KEY, "guests", t)); batch.delete(doc(db, "invites", t));
@@ -139,7 +137,121 @@ $("#rows").addEventListener("click", async (e) => {
 
 $("#csv").addEventListener("click", () => {
   const q = (v) => `"${String(v ?? "").replace(/"/g, '""')}"`;
-  const lines = [["Household", "RSVP", "Adults", "Kids", "Note", "Memo", "Opened", "Updated", "Link"].map(q).join(",")]
-    .concat(rows().map((r) => [r.name, label[r.status && r.status !== "none" ? r.status : "none"], r.adults ?? 0, r.kids ?? 0, r.note || "", r.memo, fmt(r.openedAt), fmt(r.updatedAt), linkFor(r.t)].map(q).join(",")));
+  const lines = [["Household", "Emails", "RSVP", "Adults", "Kids", "Note", "Memo", "Opened", "Updated", "Emailed", "Link"].map(q).join(",")]
+    .concat(rows().map((r) => [r.name, (r.emails || []).join("; "), label[r.status && r.status !== "none" ? r.status : "none"], r.adults ?? 0, r.kids ?? 0, r.note || "", r.memo, fmt(r.openedAt), fmt(r.updatedAt), fmt(r.emailedAt), linkFor(r.t)].map(q).join(",")));
   const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([lines.join("\n")], { type: "text/csv" })); a.download = "christmas-rsvps.csv"; a.click();
 });
+
+// ================= Emails =================
+/** Validate an emails box; shows a hint under it. Returns the clean list, or null if something is wrong. */
+function checkEmails(text, hintEl) {
+  const { emails, bad } = parseEmails(text);
+  const err = bad.length ? `❌ Not an email address: ${bad.map((x) => `"${x}"`).join(", ")}` : emails.length > MAX_EMAILS ? `❌ Max ${MAX_EMAILS} emails per household` : "";
+  if (hintEl) { hintEl.hidden = !err && !emails.length; hintEl.className = "email-hint " + (err ? "err" : "ok");
+    hintEl.textContent = err || `✅ ${emails.length} email${emails.length === 1 ? "" : "s"}: ${emails.join(", ")}`; }
+  return err ? null : emails;
+}
+$("#addEmails").addEventListener("input", (e) => { e.target.style.height = "auto"; e.target.style.height = Math.min(e.target.scrollHeight + 4, 160) + "px"; checkEmails(e.target.value, $("#addEmailsHint")); });
+
+// ---- bulk add ----
+const bulkParse = () => {
+  const have = new Set([...guests.values()].map((g) => g.name.toLowerCase())), mine = new Set();
+  return $("#bulkText").value.split(/\r?\n/).map(parseBulkLine).filter(Boolean).map((l) => {
+    const k = l.name.toLowerCase(); l.dup = have.has(k) || mine.has(k); mine.add(k);
+    l.err = !l.name ? "missing household name" : l.bad.length ? `bad email: ${l.bad.join(", ")}` : l.emails.length > MAX_EMAILS ? `max ${MAX_EMAILS} emails` : "";
+    return l; });
+};
+function bulkPreview() {
+  const ls = bulkParse(), ok = ls.filter((l) => !l.err && !l.dup);
+  $("#bulkPreview").innerHTML = ls.map((l) => `<div class="${l.err ? "bad" : l.dup ? "dup" : ""}">${l.err ? "❌" : l.dup ? "⚠️" : "✅"} <b>${esc(l.name || "?")}</b> ${l.emails.length ? "— " + l.emails.map(esc).join(", ") : "<i>(no email)</i>"}${l.err ? ` — ${esc(l.err)}` : l.dup ? " — already on the list, will be skipped" : ""}</div>`).join("");
+  const nbad = ls.filter((l) => l.err).length;
+  $("#bulkAdd").disabled = !ok.length || nbad > 0;
+  $("#bulkAdd").textContent = nbad ? `Fix ${nbad} line${nbad > 1 ? "s" : ""} first` : ok.length ? `Add ${ok.length} household${ok.length === 1 ? "" : "s"}` : "Add households";
+}
+$("#bulkText").addEventListener("input", bulkPreview);
+$("#bulkAdd").addEventListener("click", async () => {
+  const ls = bulkParse(); if (ls.some((l) => l.err)) return bulkPreview();
+  const todo = ls.filter((l) => !l.dup), m = $("#bulkMsg"); if (!todo.length) return;
+  m.hidden = false; m.className = "save-msg busy"; m.textContent = `⏳ Adding ${todo.length}…`; $("#bulkAdd").disabled = true;
+  let done = 0;
+  try {
+    for (let i = 0; i < todo.length; i += 200) {
+      const b = writeBatch(db);
+      for (const l of todo.slice(i, i + 200)) { const t = newToken(), g = { name: l.name, createdAt: serverTimestamp() }; if (l.emails.length) g.emails = l.emails;
+        b.set(doc(db, "hosts", KEY, "guests", t), g);
+        b.set(doc(db, "invites", t), { name: l.name, status: "none", adults: 0, kids: 0, note: "", createdAt: serverTimestamp() }); }
+      await withTimeout(b.commit(), 15000); done += Math.min(200, todo.length - i);
+    }
+    m.className = "save-msg ok"; m.textContent = `✅ Added ${done} household${done === 1 ? "" : "s"}. Use ✉️ Email invite on each row (or "Email all" below).`;
+    $("#bulkText").value = ""; bulkPreview();
+  } catch (err) { console.error(err); m.className = "save-msg err"; m.textContent = `❌ Stopped after ${done} — check your connection and try again (already-added ones will be skipped).`; bulkPreview(); }
+});
+
+// ---- edit dialog ----
+let editing = null;
+function openEdit(t) {
+  const g = guests.get(t); editing = t;
+  $("#edName").value = g.name; $("#edMemo").value = g.memo || ""; $("#edEmails").value = (g.emails || []).join(", ");
+  $("#edHint").hidden = true; $("#edReset").checked = false; $("#edResetWrap").hidden = !g.emailedAt;
+  const dlg = $("#editDlg"); if (dlg.showModal) dlg.showModal(); else dlg.setAttribute("open", "");
+}
+$("#edEmails").addEventListener("input", (e) => checkEmails(e.target.value, $("#edHint")));
+$("#editForm").addEventListener("submit", async (e) => {
+  if (e.submitter?.value !== "save") return;
+  e.preventDefault();
+  const t = editing, g = guests.get(t); if (!g) return $("#editDlg").close();
+  const name = $("#edName").value.trim(), memo = $("#edMemo").value.trim().slice(0, 300);
+  const emails = checkEmails($("#edEmails").value, $("#edHint")); if (!name || !emails) return;
+  const upd = { name, memo: memo || deleteField(), emails: emails.length ? emails : deleteField() };
+  if ($("#edReset").checked) { upd.emailedAt = deleteField(); upd.emailedVia = deleteField(); }
+  const batch = writeBatch(db); batch.update(doc(db, "hosts", KEY, "guests", t), upd);
+  if (name !== g.name) batch.update(doc(db, "invites", t), { name });
+  $("#edSave").disabled = true;
+  try { await withTimeout(batch.commit()); $("#editDlg").close(); toast("Saved ✏️"); }
+  catch (err) { console.error(err); alert("Couldn't save the change. Check your connection."); }
+  finally { $("#edSave").disabled = false; }
+});
+
+// ---- email a household ----
+const markEmailed = (t, via) => updateDoc(doc(db, "hosts", KEY, "guests", t), { emailedAt: serverTimestamp(), emailedVia: via }).catch((err) => console.error("markEmailed", err));
+function openMailto(url) { const a = document.createElement("a"); a.href = url; a.rel = "noopener"; document.body.appendChild(a); a.click(); a.remove(); }
+/** Tap handler: copies the picture e-mail (rich HTML) and opens a new e-mail addressed to the household. Keep it synchronous up to copyRich (iOS). */
+function emailInvite(t) {
+  const g = guests.get(t); if (!g) return;
+  const copied = copyRich(emailHtml(g.name, t), emailText(g.name, t));
+  const mail = mailtoUrl(g.emails || [], g.name, t);
+  Promise.race([copied, new Promise((r) => setTimeout(() => r(null), 700))]).then((ok) => {
+    toast(ok === false ? "Couldn't copy the picture — the e-mail still has the link" : "Invite copied — paste it into the email body", 6000);
+    if (!(g.emails || []).length) setTimeout(() => toast("No email on file — add one with ✏️, or type it in the To: line", 5000), 6000);
+    openMailto(mail); markEmailed(t, "copy");
+  });
+}
+async function downloadEml(t) {
+  const g = guests.get(t); if (!g) return;
+  try {
+    const eml = await buildEml(g.emails || [], g.name, t);
+    const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([eml], { type: "message/rfc822" }));
+    a.download = `Invite - ${g.name.replace(/[\\/:*?"<>|]+/g, "").slice(0, 60)}.eml`; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 30000);
+    toast("Draft downloaded — open it in Outlook or Apple Mail, then hit Send", 5000); markEmailed(t, "eml");
+  } catch (err) { console.error(err); alert("Couldn't build the draft. Check your connection."); }
+}
+
+// ---- email all not-yet-emailed (one at a time; each needs its own tap) ----
+let queue = [];
+function showQueue() {
+  queue = queue.filter((t) => guests.has(t));
+  if (!queue.length) { $("#queue").hidden = true; return; }
+  const t = queue[0], g = guests.get(t);
+  $("#qCount").textContent = `${queue.length} left to email`; $("#qName").textContent = g.name;
+  $("#qTo").textContent = (g.emails || []).join(", ") || "no email on file"; $("#queue").hidden = false;
+}
+$("#emailAll").addEventListener("click", () => {
+  queue = rows().filter((r) => !r.emailedAt && r.emails?.length).map((r) => r.t);
+  if (!queue.length) return toast(rows().some((r) => !r.emailedAt) ? "Everyone not yet emailed is missing an email — add them with ✏️" : "Everyone has been emailed already 🎉", 4000);
+  showQueue();
+});
+$("#qGo").addEventListener("click", () => { const t = queue.shift(); emailInvite(t); showQueue(); });
+$("#qEml").addEventListener("click", () => { const t = queue.shift(); downloadEml(t); showQueue(); });
+$("#qSkip").addEventListener("click", () => { queue.shift(); showQueue(); });
+$("#qStop").addEventListener("click", () => { queue = []; showQueue(); });

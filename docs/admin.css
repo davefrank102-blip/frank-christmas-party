@@ -48,3 +48,55 @@ table.guests{width:100%;border-collapse:collapse;font-size:15px}
 .linkbox{display:flex;gap:8px;margin-top:6px;flex-wrap:wrap}
 .linkbox input{flex:1;min-width:200px;border:2px solid #8fd7a5;border-radius:10px;padding:8px;font:inherit;font-size:13px}
 .hq-head h1{line-height:1.2;padding-bottom:.12em}
+/* emails */
+@media(min-width:800px){.add-form{grid-template-columns:1.4fr 2fr 1.4fr auto}}
+.add-form textarea,.bulk textarea,.edit-dlg textarea,.edit-dlg input:not([type]){border:2px solid #efe2cf;border-radius:12px;padding:11px 12px;font:inherit;font-weight:400;background:#fff;resize:vertical;width:100%;box-sizing:border-box;font-size:16px}
+.add-form input{font-size:16px}
+.add-form textarea{min-height:48px}
+.email-hint{margin-top:8px;font-size:14px;font-weight:700}
+.email-hint.ok{color:#0e5a2c}.email-hint.err{color:#8d1022}
+.bulk{margin-top:14px;border-top:1px dashed #e6d6c0;padding-top:10px}
+.bulk summary{cursor:pointer;font-weight:800;color:var(--green2);padding:4px 0}
+.bulk .sub{margin:6px 0 8px;font-size:14px}
+.bulk .btn{margin-top:10px}
+.bulk-preview{font-size:13px;margin-top:6px;max-height:180px;overflow:auto}
+.bulk-preview div{padding:3px 0;border-bottom:1px solid #f4ebdd}
+.bulk-preview .bad{color:#8d1022;font-weight:700}
+.bulk-preview .dup{color:#7a5600}
+.guests .emails{display:block;font-size:12px;color:#1f5a8a;word-break:break-all}
+.guests .noemail{display:block;font-size:12px;color:#b08a6a;font-style:italic}
+.acts button.mail{background:#d7263d;color:#fff}
+.mailed{white-space:nowrap}
+.queue{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);z-index:55;width:min(560px,calc(100% - 20px));background:#fffaf2;color:var(--ink);border-radius:18px;padding:12px 14px;box-shadow:0 10px 30px rgba(0,0,0,.45);display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+.queue .q-txt{display:flex;flex-direction:column;min-width:0}
+.queue .q-txt span{font-size:12px;color:#1f5a8a;word-break:break-all}
+.queue .q-btns{display:flex;gap:6px;flex-wrap:wrap}
+.queue .btn{padding:9px 14px;font-size:15px}
+.edit-dlg{border:0;border-radius:20px;padding:18px;width:min(460px,calc(100% - 24px));color:var(--ink);background:#fffaf2;box-shadow:0 20px 50px rgba(0,0,0,.5)}
+.edit-dlg::backdrop{background:rgba(5,10,25,.6)}
+.edit-dlg h3{margin:0 0 10px;color:var(--red2)}
+.edit-dlg label{display:block;font-weight:800;font-size:14px;margin:10px 0 0}
+.edit-dlg label input,.edit-dlg label textarea{margin-top:4px;font-weight:400}
+.edit-dlg .chk{display:flex;gap:8px;align-items:center}
+.edit-dlg .chk input{width:auto;margin:0}
+.dlg-btns{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}
+.guests td:first-child{min-width:190px}
+.guests .emails{word-break:normal;overflow-wrap:anywhere}
+.guests td.acts{white-space:normal;min-width:270px;max-width:330px}
+.queue[hidden]{display:none}
+@media(max-width:700px){
+  table.guests,.guests tbody,.guests tr,.guests td{display:block}
+  .guests thead{display:none}
+  .guests tr{border-bottom:2px solid #efe2cf;padding:10px 0}
+  .guests td{border:0;padding:2px 0}
+  .guests td:first-child{min-width:0;font-size:17px}
+  .guests td[data-l]{display:inline-block;margin-right:12px;vertical-align:middle}
+  .guests td.num{text-align:left}
+  .guests td[data-l]::before{content:attr(data-l) ": ";font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.8px;color:#8a6a5a}
+  .guests td[data-l=RSVP]::before{content:""}
+  .guests td.note:empty{display:none}
+  .guests td.note{display:block;max-width:none}
+  .guests td .memo{display:inline}
+  .guests td.acts{min-width:0;max-width:none;margin-top:6px}
+  .acts button.mail{font-size:16px;padding:9px 14px}
+}

@@ -15,6 +15,12 @@ export const PARTY = {
   rsvpBy: "Please RSVP by December 15",
   // Optional photo behind the gift intro, e.g. "images/photos/photo-1.jpg" (null = plain night sky)
   introPhoto: null,
+  // Invite e-mails (dashboard "✉️ Email invite")
+  emailSubject: "You're invited: Frank Family Christmas Eve 🎄",
+  emailSignoff: "Love, David, Krissy, Brielle, Juliette & Dylan",
+  // Public site address used for links + the invite picture inside e-mails (must be https)
+  publicBase: "https://davefrank102-blip.github.io/frank-christmas-party/",
+  inviteCard: "images/invite-card.jpg",
 };
 
 // Photos and Elf-Dance faces are listed in images/photos/photos.json and

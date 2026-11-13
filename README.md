@@ -31,3 +31,11 @@ Run `python3 tools/bump_version.py` before every commit/push. It stamps a build 
 
 ## Elf dances
 Tap an elf for a random dance. Poses live in `tools/gen_dances.py` (readable pose tables) -> run `python3 tools/gen_dances.py` to regenerate `docs/dances.css` + `docs/dances.js`.
+
+## Emailing invites
+- Each household can have up to 10 email addresses (add form, ✏️ edit, or "📋 Add many at once": `The Smiths: john@x.com, jane@y.com`, one household per line).
+  Emails are stored only on the host-side record (`hosts/<host-key>/guests/{token}`), never in the public `invites/{token}` doc.
+- **✉️ Email invite** copies a rich HTML e-mail (picture + RSVP button + details) to the clipboard and opens a new e-mail to that household's addresses with a plain-text version (mailto can't carry pictures, so paste over the body). **⬇ .eml** downloads a draft (`X-Unsent: 1`, picture inline) that opens as an editable draft in Outlook / Apple Mail on a computer.
+  Either one marks the household "Emailed". **✉️ Email all not-yet-emailed** walks through the rest one tap at a time.
+- Invite picture: `docs/images/invite-card.jpg` (also the link-preview image) — rebuild with `.venv/bin/python tools/make_invite_card.py`.
+- Test: `.venv/bin/python tools/e2e_email.py [BASE]` (adds and deletes temporary TEST households).
