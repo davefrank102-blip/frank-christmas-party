@@ -1,6 +1,6 @@
 // Invite e-mail helpers: address parsing, rich HTML e-mail, plain text, mailto and .eml drafts.
-import { PARTY, hasAddress } from "./config.js?v=20261113140947";
-import { esc } from "./shared.js?v=20261113140947";
+import { PARTY, hasAddress } from "./config.js?v=20261113141651";
+import { esc } from "./shared.js?v=20261113141651";
 
 export const MAX_EMAILS = 10;
 const EMAIL_RE = /^[^\s@<>()",;:\\[\]]+@[^\s@<>()",;:\\[\]]+\.[A-Za-z]{2,}$/;

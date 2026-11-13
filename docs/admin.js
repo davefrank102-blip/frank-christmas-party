@@ -1,6 +1,6 @@
-import { db, withTimeout, mountCountdown, esc, PARTY } from "./shared.js?v=20261113140947";
+import { db, withTimeout, mountCountdown, esc, PARTY } from "./shared.js?v=20261113141651";
 import { collection, doc, onSnapshot, writeBatch, serverTimestamp, getDocs, updateDoc, deleteField } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
-import { parseEmails, parseBulkLine, MAX_EMAILS, emailHtml, emailText, mailtoUrl, copyRich, buildEml } from "./email.js?v=20261113140947";
+import { parseEmails, parseBulkLine, MAX_EMAILS, emailHtml, emailText, mailtoUrl, copyRich, buildEml } from "./email.js?v=20261113141651";
 
 const $ = (s) => document.querySelector(s);
 const KEY = new URLSearchParams(location.hash.slice(1)).get("k") || "";
@@ -123,7 +123,7 @@ $("#addForm").addEventListener("submit", async (e) => {
 $("#rows").addEventListener("click", async (e) => {
   const b = e.target.closest("button[data-a]"); if (!b) return; const t = b.closest("tr").dataset.t; const g = guests.get(t);
   if (b.dataset.a === "copy") copy(linkFor(t), "Link copied 🔗");
-  if (b.dataset.a === "open") window.open(linkFor(t) + "&intro", "_blank", "noopener");
+  if (b.dataset.a === "open") window.open(linkFor(t) + "&preview", "_blank", "noopener");
   if (b.dataset.a === "msg") copy(`🎄 You're invited to ${PARTY.title}! ${PARTY.timeText}. Open your invitation & RSVP here: ${linkFor(t)}`, "Invite message copied ✉️");
   if (b.dataset.a === "edit") openEdit(t);
   if (b.dataset.a === "mail") emailInvite(t);

@@ -248,3 +248,5 @@ transition:opacity .45s,visibility .45s;animation:cueBounce 1.4s ease-in-out inf
 .elf:not(.elf-cut) .neck,.elf:not(.elf-cut) .neck+rect{display:none}
 .elf-row{padding-top:12px}
 @media (max-width:430px){.dance-tag{font-size:11.5px;padding:2px 8px}}
+
+.music-btn[hidden]{display:none}

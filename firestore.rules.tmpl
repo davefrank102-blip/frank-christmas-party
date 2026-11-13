@@ -68,6 +68,7 @@ service cloud.firestore {
         && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['updatedAt'])
             || request.resource.data.updatedAt == request.time)
         && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['openedAt'])
+            || !('openedAt' in request.resource.data)          // host "reset viewed" clears it
             || request.resource.data.openedAt == request.time);
 
       // Only deletable when the host index entry is removed in the same batch.

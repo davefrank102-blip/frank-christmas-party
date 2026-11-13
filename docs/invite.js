@@ -1,13 +1,14 @@
-import { db, withTimeout, mountCountdown, calendarLinks, esc, PARTY, hasAddress } from "./shared.js?v=20261113140947";
-import { DANCES } from "./dances.js?v=20261113140947";
-import { music } from "./music.js?v=20261113140947";
+import { db, withTimeout, mountCountdown, calendarLinks, esc, PARTY, hasAddress } from "./shared.js?v=20261113141651";
+import { DANCES } from "./dances.js?v=20261113141651";
+import { music } from "./music.js?v=20261113141651";
 import { doc, getDoc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 
-const BUILD = "20261113140947"; // set by tools/bump_version.py (cache-busting for JSON + images)
+const BUILD = "20261113141651"; // set by tools/bump_version.py (cache-busting for JSON + images)
 const $ = (s) => document.querySelector(s);
 const params = new URLSearchParams(location.hash.slice(1) || location.search.slice(1));
 const token = (params.get("t") || params.get("g") || "").trim();
 const forceIntro = params.has("intro");
+const preview = params.has("preview"); // host preview from the dashboard: never marks the invite as opened
 let invite = null;
 
 /* ---------------- lights + snow ---------------- */
@@ -59,7 +60,6 @@ function openGift() {
   g.classList.add("open"); burst($("#burst")); mBtn.hidden = false;
   // sound is ON by default: the tap on the present is the user gesture that unlocks audio -> party burst, then the music
   try { paintMusic(music.start(true)); } catch (e) { console.warn("audio", e); }
-  if (token) localStorage.setItem("xmas-seen-" + token, "1");
   setTimeout(() => { $("#invite").hidden = false; $("#intro")?.classList.add("gone"); revealObserver(); window.scrollTo(0, 0); }, 900);
   setTimeout(() => { $("#intro")?.remove(); }, 2000);
 }
@@ -266,7 +266,7 @@ async function loadInvite() {
     $("#giftTag").textContent = `To: ${invite.name}`;
     if (invite.status && invite.status !== "none") { state.status = invite.status; state.adults = invite.adults; state.kids = invite.kids; $("#note").value = invite.note || ""; }
     showCurrent(); paint();
-    if (!invite.openedAt) updateDoc(doc(db, "invites", token), { openedAt: serverTimestamp() }).catch(() => {});
+    if (!invite.openedAt && !preview) updateDoc(doc(db, "invites", token), { openedAt: serverTimestamp() }).catch(() => {});
   } catch (e) {
     $("#rsvpWrap").hidden = true; const n = $("#noToken"); n.hidden = false;
     n.textContent = e.message === "notfound" ? "Hmm, we couldn't find this invitation link. Please check the link from your message, or contact the Franks."
@@ -274,4 +274,5 @@ async function loadInvite() {
   }
 }
 await loadInvite();
-if (!forceIntro && token && localStorage.getItem("xmas-seen-" + token) && !$("#gift")?.classList.contains("open")) { $("#intro").remove(); $("#invite").hidden = false; mBtn.hidden = false; revealObserver(); }
+// Every visit starts at the present (sound ON by default): tapping it is the gesture browsers require before audio can play,
+// so it always gives the party burst + music. (Older builds skipped the present for returning guests, which left the music off.)
