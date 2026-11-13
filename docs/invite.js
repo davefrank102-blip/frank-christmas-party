@@ -1,4 +1,5 @@
 import { db, withTimeout, mountCountdown, calendarLinks, esc, PARTY, hasAddress } from "./shared.js";
+import { music } from "./music.js";
 import { doc, getDoc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 
 const $ = (s) => document.querySelector(s);
@@ -27,33 +28,11 @@ let invite = null;
   addEventListener("resize", size); size(); step();
 })();
 
-/* ---------------- music (Jingle Bells, synthesized, opt-in only) ---------------- */
-const music = (() => {
-  let ac, timer, on = false, t0, idx = 0;
-  const N = { C4: 261.6, D4: 293.7, E4: 329.6, F4: 349.2, G4: 392, A4: 440, B4: 493.9, C5: 523.3, D5: 587.3, G3: 196 };
-  const tune = "E4 1,E4 1,E4 2,E4 1,E4 1,E4 2,E4 1,G4 1,C4 1.5,D4 .5,E4 4,F4 1,F4 1,F4 1.5,F4 .5,F4 1,E4 1,E4 1,E4 .5,E4 .5,E4 1,D4 1,D4 1,E4 1,D4 2,G4 2,E4 1,E4 1,E4 2,E4 1,E4 1,E4 2,E4 1,G4 1,C4 1.5,D4 .5,E4 4,F4 1,F4 1,F4 1.5,F4 .5,F4 1,E4 1,E4 1,E4 .5,E4 .5,G4 1,G4 1,F4 1,D4 1,C4 4"
-    .split(",").map((s) => s.split(" ")).map(([n, d]) => [N[n], +d]);
-  const beat = 0.28;
-  const bell = (f, t, d) => {
-    for (const [mul, g] of [[1, .22], [2, .07], [3.01, .03]]) {
-      const o = ac.createOscillator(), v = ac.createGain();
-      o.type = "sine"; o.frequency.value = f * mul;
-      v.gain.setValueAtTime(0, t); v.gain.linearRampToValueAtTime(g, t + .01); v.gain.exponentialRampToValueAtTime(.0005, t + Math.max(.35, d * 1.6));
-      o.connect(v).connect(ac.destination); o.start(t); o.stop(t + d * 1.8 + .1);
-    }
-  };
-  const jingle = (t) => { const b = ac.createBuffer(1, ac.sampleRate * .08, ac.sampleRate), d = b.getChannelData(0);
-    for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * Math.exp(-i / (d.length / 6)) * .06;
-    const s = ac.createBufferSource(), hp = ac.createBiquadFilter(); hp.type = "highpass"; hp.frequency.value = 6000;
-    s.buffer = b; s.connect(hp).connect(ac.destination); s.start(t); };
-  const sched = () => { while (t0 < ac.currentTime + .6) { const [f, d] = tune[idx]; bell(f, t0, d * beat);
-      if (idx % 2 === 0) jingle(t0); t0 += d * beat; idx = (idx + 1) % tune.length; if (idx === 0) t0 += beat * 2; } };
-  return { toggle() { ac ||= new (window.AudioContext || window.webkitAudioContext)(); on = !on;
-      if (on) { ac.resume(); t0 = ac.currentTime + .1; idx = 0; timer = setInterval(sched, 150); sched(); } else { clearInterval(timer); ac.suspend(); }
-      return on; } };
-})();
-$("#musicBtn").addEventListener("click", (e) => { const on = music.toggle(); e.currentTarget.setAttribute("aria-pressed", on);
-  e.currentTarget.innerHTML = `${on ? "🔊" : "🔇"} <span>Music</span>`; });
+/* ---------------- music (see music.js — synthesized, starts only after a tap) ---------------- */
+const mBtn = $("#musicBtn"); mBtn.hidden = true; // no music button (and no sound) until the present is opened
+const paintMusic = (on) => { mBtn.setAttribute("aria-pressed", on); mBtn.innerHTML = `${on ? "🔊" : "🔇"} <span>Music</span>`;
+  mBtn.title = on ? "Mute the music" : "Play Jingle Bells"; };
+mBtn.addEventListener("click", () => { paintMusic(music.toggle()); });
 
 /* ---------------- confetti / sparkle burst ---------------- */
 function burst(host, n = 140, originY = .52) {
@@ -75,7 +54,9 @@ function burst(host, n = 140, originY = .52) {
 /* ---------------- intro ---------------- */
 function openGift() {
   const g = $("#gift"); if (g.classList.contains("open")) return;
-  g.classList.add("open"); burst($("#burst"));
+  g.classList.add("open"); burst($("#burst")); mBtn.hidden = false;
+  // sound is ON by default: the tap on the present is the user gesture that unlocks audio -> party burst, then the music
+  try { paintMusic(music.start(true)); } catch (e) { console.warn("audio", e); }
   if (token) localStorage.setItem("xmas-seen-" + token, "1");
   setTimeout(() => { $("#invite").hidden = false; $("#intro").classList.add("gone"); revealObserver(); window.scrollTo(0, 0); }, 900);
   setTimeout(() => { $("#intro").remove(); }, 2000);
@@ -223,4 +204,4 @@ async function loadInvite() {
   }
 }
 await loadInvite();
-if (!forceIntro && token && localStorage.getItem("xmas-seen-" + token)) { $("#intro").remove(); $("#invite").hidden = false; revealObserver(); }
+if (!forceIntro && token && localStorage.getItem("xmas-seen-" + token)) { $("#intro").remove(); $("#invite").hidden = false; mBtn.hidden = false; revealObserver(); }

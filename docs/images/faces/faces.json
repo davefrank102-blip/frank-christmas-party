@@ -1,32 +1,22 @@
 [
   {
-    "file": "placeholder-dad.png",
-    "name": "Dad",
-    "placeholder": true
+    "file": "dylan.png",
+    "name": "Dylan"
   },
   {
-    "file": "placeholder-mom.png",
-    "name": "Mom",
-    "placeholder": true
+    "file": "david.png",
+    "name": "David"
   },
   {
-    "file": "placeholder-kiddo.png",
-    "name": "Kiddo",
-    "placeholder": true
+    "file": "juliette.png",
+    "name": "Juliette"
   },
   {
-    "file": "placeholder-grandma.png",
-    "name": "Grandma",
-    "placeholder": true
+    "file": "brielle.png",
+    "name": "Brielle"
   },
   {
-    "file": "placeholder-uncle.png",
-    "name": "Uncle",
-    "placeholder": true
-  },
-  {
-    "file": "placeholder-cousin.png",
-    "name": "Cousin",
-    "placeholder": true
+    "file": "krissy.png",
+    "name": "Krissy"
   }
 ]

@@ -1,22 +1,26 @@
 [
   {
-    "file": "placeholder-1.jpg",
-    "caption": "Our House",
-    "placeholder": true
+    "file": "photo-1.jpg",
+    "caption": "Our house, all lit up"
   },
   {
-    "file": "placeholder-2.jpg",
-    "caption": "The Family",
-    "placeholder": true
+    "file": "photo-2.jpg",
+    "caption": "Cozy by the fire"
   },
   {
-    "file": "placeholder-3.jpg",
-    "caption": "Christmas Past",
-    "placeholder": true
+    "file": "photo-3.jpg",
+    "caption": "The tree, the village & the train"
   },
   {
-    "file": "placeholder-4.jpg",
-    "caption": "The Tree",
-    "placeholder": true
+    "file": "photo-4.jpg",
+    "caption": "The whole crew"
+  },
+  {
+    "file": "photo-5.jpg",
+    "caption": "Our little elves"
+  },
+  {
+    "file": "photo-6.jpg",
+    "caption": "A snowy backyard"
   }
 ]

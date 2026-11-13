@@ -7,3 +7,6 @@ tools/faces_src/
 .venv/
 .admin_url
 *.url
+tmp/
+orig.zip
+candidates-sheet*.jpg

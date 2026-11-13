@@ -68,7 +68,7 @@ def main():
         sys.exit(f"No photos in {a.src}")
     for f in files:
         try:
-            img = ImageOps.exif_transpose(Image.open(os.path.join(a.src, f))).convert("RGB")
+            img = ImageOps.exif_transpose(Image.open(os.path.join(a.src, f))).convert("RGB"); img.info.clear()
         except Exception as e:
             print(f"!! {f}: can't open ({e})"); continue
         gray = cv2.equalizeHist(cv2.cvtColor(np.array(img), cv2.COLOR_RGB2GRAY))
