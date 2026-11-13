@@ -1,9 +1,9 @@
-import { db, withTimeout, mountCountdown, calendarLinks, esc, PARTY, hasAddress } from "./shared.js?v=20261112210138";
-import { DANCES } from "./dances.js?v=20261112210138";
-import { music } from "./music.js?v=20261112210138";
+import { db, withTimeout, mountCountdown, calendarLinks, esc, PARTY, hasAddress } from "./shared.js?v=20261112210354";
+import { DANCES } from "./dances.js?v=20261112210354";
+import { music } from "./music.js?v=20261112210354";
 import { doc, getDoc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 
-const BUILD = "20261112210138"; // set by tools/bump_version.py (cache-busting for JSON + images)
+const BUILD = "20261112210354"; // set by tools/bump_version.py (cache-busting for JSON + images)
 const $ = (s) => document.querySelector(s);
 const params = new URLSearchParams(location.hash.slice(1) || location.search.slice(1));
 const token = (params.get("t") || params.get("g") || "").trim();
@@ -60,8 +60,8 @@ function openGift() {
   // sound is ON by default: the tap on the present is the user gesture that unlocks audio -> party burst, then the music
   try { paintMusic(music.start(true)); } catch (e) { console.warn("audio", e); }
   if (token) localStorage.setItem("xmas-seen-" + token, "1");
-  setTimeout(() => { $("#invite").hidden = false; $("#intro").classList.add("gone"); revealObserver(); window.scrollTo(0, 0); }, 900);
-  setTimeout(() => { $("#intro").remove(); }, 2000);
+  setTimeout(() => { $("#invite").hidden = false; $("#intro")?.classList.add("gone"); revealObserver(); window.scrollTo(0, 0); }, 900);
+  setTimeout(() => { $("#intro")?.remove(); }, 2000);
 }
 $("#gift").addEventListener("click", openGift);
 if (PARTY.introPhoto) { const i = $("#intro"); i.classList.add("has-photo"); i.style.backgroundImage = `radial-gradient(600px 500px at 50% 45%, rgba(11,26,51,.35), rgba(5,11,23,.88)), url("${PARTY.introPhoto}")`; }
@@ -262,4 +262,4 @@ async function loadInvite() {
   }
 }
 await loadInvite();
-if (!forceIntro && token && localStorage.getItem("xmas-seen-" + token)) { $("#intro").remove(); $("#invite").hidden = false; mBtn.hidden = false; revealObserver(); }
+if (!forceIntro && token && localStorage.getItem("xmas-seen-" + token) && !$("#gift")?.classList.contains("open")) { $("#intro").remove(); $("#invite").hidden = false; mBtn.hidden = false; revealObserver(); }
