@@ -1,6 +1,6 @@
-import { db, withTimeout, mountCountdown, esc, PARTY } from "./shared.js?v=20261113082643";
+import { db, withTimeout, mountCountdown, esc, PARTY } from "./shared.js?v=20261113131737";
 import { collection, doc, onSnapshot, writeBatch, serverTimestamp, getDocs, updateDoc, deleteField } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
-import { parseEmails, parseBulkLine, MAX_EMAILS, emailHtml, emailText, mailtoUrl, copyRich, buildEml } from "./email.js?v=20261113082643";
+import { parseEmails, parseBulkLine, MAX_EMAILS, emailHtml, emailText, mailtoUrl, copyRich, buildEml } from "./email.js?v=20261113131737";
 
 const $ = (s) => document.querySelector(s);
 const KEY = new URLSearchParams(location.hash.slice(1)).get("k") || "";

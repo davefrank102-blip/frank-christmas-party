@@ -1,9 +1,9 @@
-import { db, withTimeout, mountCountdown, calendarLinks, esc, PARTY, hasAddress } from "./shared.js?v=20261113082643";
-import { DANCES } from "./dances.js?v=20261113082643";
-import { music } from "./music.js?v=20261113082643";
+import { db, withTimeout, mountCountdown, calendarLinks, esc, PARTY, hasAddress } from "./shared.js?v=20261113131737";
+import { DANCES } from "./dances.js?v=20261113131737";
+import { music } from "./music.js?v=20261113131737";
 import { doc, getDoc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 
-const BUILD = "20261113082643"; // set by tools/bump_version.py (cache-busting for JSON + images)
+const BUILD = "20261113131737"; // set by tools/bump_version.py (cache-busting for JSON + images)
 const $ = (s) => document.querySelector(s);
 const params = new URLSearchParams(location.hash.slice(1) || location.search.slice(1));
 const token = (params.get("t") || params.get("g") || "").trim();
@@ -78,12 +78,24 @@ $("#replay").addEventListener("click", (e) => { e.preventDefault(); location.has
 mountCountdown($("#countdown"));
 const cal = calendarLinks(); $("#gcal").href = cal.google; $("#ics").href = cal.icsUrl;
 
-/* "scroll for more" cue: shown on the first screen after the intro, fades away once they scroll */
+/* "scroll for more" cue: stays on screen while there's more below; hides within 40px of the bottom, comes back on scroll up */
 function showScrollCue() {
-  const c = $("#scrollCue"); if (!c || scrollY > 40) return; c.hidden = false; c.classList.remove("gone");
-  const off = () => { if (scrollY > 40) { c.classList.add("gone"); removeEventListener("scroll", off); } };
-  addEventListener("scroll", off, { passive: true });
-  c.onclick = () => { const next = $("#photos") || $("#elves") || $("#rsvp"); next && next.scrollIntoView({ behavior: "smooth", block: "start" }); };
+  const c = $("#scrollCue"); if (!c || c.dataset.on) return; c.dataset.on = "1"; c.hidden = false;
+  let raf = 0;
+  const update = () => { raf = 0;
+    const max = document.documentElement.scrollHeight - innerHeight, y = scrollY || document.documentElement.scrollTop;
+    c.classList.toggle("gone", max - y <= 40);
+    c.classList.toggle("compact", y > 40); };
+  const queue = () => { if (!raf) raf = requestAnimationFrame(update); };
+  addEventListener("scroll", queue, { passive: true }); addEventListener("resize", queue);
+  if (window.ResizeObserver) new ResizeObserver(queue).observe(document.body);
+  update();
+  c.onclick = () => {
+    const y = scrollY, h = innerHeight;
+    const next = [...document.querySelectorAll("#invite > section, #invite > footer")]
+      .map((el) => el.getBoundingClientRect().top + y - 12).find((top) => top > y + 60 && top < y + h * 1.1);
+    window.scrollTo({ top: next ?? y + Math.round(h * 0.85), behavior: "smooth" });
+  };
 }
 function revealObserver() { showScrollCue();
   const io = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); } }), { threshold: .12 });
