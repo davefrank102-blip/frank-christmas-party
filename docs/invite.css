@@ -187,3 +187,4 @@ html{background:#060d1c}
 .stepper>div{gap:8px}.stepper button{width:36px;height:36px}
 .counts{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
 @media (max-width:520px){.elf{zoom:.8}.elf-row{gap:0}}
+#intro.has-photo{background-size:cover;background-position:center}

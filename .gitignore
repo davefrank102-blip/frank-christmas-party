@@ -6,3 +6,4 @@ screenshots/
 tools/faces_src/
 .venv/
 .admin_url
+*.url

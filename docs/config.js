@@ -13,6 +13,8 @@ export const PARTY = {
   areaText: "Manasquan, NJ",
   details: "Food, drinks, cookies, carols and plenty of Christmas cheer. Kids very welcome!",
   rsvpBy: "Please RSVP by December 15",
+  // Optional photo behind the gift intro, e.g. "images/photos/photo-1.jpg" (null = plain night sky)
+  introPhoto: null,
 };
 
 // Photos and Elf-Dance faces are listed in images/photos/photos.json and

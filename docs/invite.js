@@ -81,6 +81,7 @@ function openGift() {
   setTimeout(() => { $("#intro").remove(); }, 2000);
 }
 $("#gift").addEventListener("click", openGift);
+if (PARTY.introPhoto) { const i = $("#intro"); i.classList.add("has-photo"); i.style.backgroundImage = `radial-gradient(600px 500px at 50% 45%, rgba(11,26,51,.35), rgba(5,11,23,.88)), url("${PARTY.introPhoto}")`; }
 
 /* ---------------- static content ---------------- */
 $("#partyTitle").textContent = PARTY.title;

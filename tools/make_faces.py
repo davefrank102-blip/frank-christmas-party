@@ -26,6 +26,7 @@ def load_cascades():
              "haarcascade_profileface.xml")]
 
 def detect(gray, cascades):
+    """Largest-first face boxes."""
     h, w = gray.shape
     min_side = max(40, min(h, w) // 12)
     for c in cascades:
@@ -55,6 +56,7 @@ def main():
     ap.add_argument("src")
     ap.add_argument("--all", action="store_true", help="extract every face, not just the largest")
     ap.add_argument("--replace", action="store_true", help="remove placeholder faces from the manifest")
+    ap.add_argument("--names", help='comma list, assigned to faces LEFT-TO-RIGHT in a group photo (implies --all), e.g. "David,Krissy,Brielle"')
     a = ap.parse_args()
     os.makedirs(OUT, exist_ok=True)
     manifest = json.load(open(MANIFEST)) if os.path.exists(MANIFEST) else []
@@ -75,8 +77,12 @@ def main():
         if not faces:
             s = min(img.size); faces = [((img.width - s) // 2 + s // 6, (img.height - s) // 2 + s // 6, s * 2 // 3, s * 2 // 3)]
             print(f"?? {f}: no face found, used centre crop (check it)")
-        for i, box in enumerate(faces if a.all else faces[:1]):
-            name = label if i == 0 else f"{label} {i + 1}"
+        names = [n.strip() for n in a.names.split(",")] if a.names else None
+        if names:
+            faces = sorted(faces[:len(names)], key=lambda f: f[0])
+            if len(faces) < len(names): print(f"!! {f}: found {len(faces)} faces but {len(names)} names - check labels")
+        for i, box in enumerate(faces if (a.all or names) else faces[:1]):
+            name = names[i] if names and i < len(names) else (label if i == 0 else f"{label} {i + 1}")
             fn = slug(name) + ".png"
             cutout(img, box).save(os.path.join(OUT, fn))
             manifest = [m for m in manifest if m["file"] != fn] + [{"file": fn, "name": name}]
