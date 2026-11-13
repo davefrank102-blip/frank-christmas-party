@@ -1,6 +1,6 @@
 // Invite e-mail helpers: address parsing, rich HTML e-mail, plain text, mailto and .eml drafts.
-import { PARTY, hasAddress } from "./config.js?v=20261113131737";
-import { esc } from "./shared.js?v=20261113131737";
+import { PARTY, hasAddress } from "./config.js?v=20261113140947";
+import { esc } from "./shared.js?v=20261113140947";
 
 export const MAX_EMAILS = 10;
 const EMAIL_RE = /^[^\s@<>()",;:\\[\]]+@[^\s@<>()",;:\\[\]]+\.[A-Za-z]{2,}$/;
@@ -48,7 +48,8 @@ export function emailHtml(name, token, img = cardUrl()) {
   const link = inviteLink(token), f = "font-family:Helvetica,Arial,sans-serif";
   return `<div style="${f};color:#2a1a12;font-size:16px;line-height:1.5;max-width:600px">
 <p style="margin:0 0 12px">${esc(greeting(name))} 🎄</p>
-<p style="margin:0 0 12px">We'd love for you to come celebrate Christmas Eve with us! Expect good food, drinks, cookies, carols and plenty of Christmas cheer &mdash; kids very welcome.</p>
+<p style="margin:0 0 12px">After many years of city-life, we are finally able to host Christmas for the family at our home!</p>
+<p style="margin:0 0 12px">We'd love for you to come celebrate Christmas Eve with us! Expect good food, drinks, cookies, carols and plenty of Christmas cheer.</p>
 <p style="margin:0 0 16px">Tap the picture to open your personal invitation (turn your sound on 🔊) and let us know if you can make it.</p>
 <p style="margin:0 0 16px"><a href="${esc(link)}" target="_blank" style="text-decoration:none"><img src="${esc(img)}" width="600" height="315" alt="${esc(PARTY.title)} &mdash; Thursday, December 24, 5&ndash;9 PM. Tap to RSVP" style="display:block;width:100%;max-width:600px;height:auto;border:0;border-radius:14px"></a></p>
 <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 18px"><tr><td style="background:#d7263d;border-radius:28px">
@@ -68,7 +69,9 @@ export function emailText(name, token) {
   const link = inviteLink(token);
   return `${greeting(name)} 🎄
 
-We'd love for you to come celebrate Christmas Eve with us! Expect good food, drinks, cookies, carols and plenty of Christmas cheer — kids very welcome.
+After many years of city-life, we are finally able to host Christmas for the family at our home!
+
+We'd love for you to come celebrate Christmas Eve with us! Expect good food, drinks, cookies, carols and plenty of Christmas cheer.
 
 Open your personal invitation & RSVP here:
 ${link}

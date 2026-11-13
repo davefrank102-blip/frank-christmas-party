@@ -76,11 +76,13 @@ async def main():
         ok(re.search(r'<a href="%s"[^>]*>[^<]*RSVP here' % re.escape(link), h) is not None, "html: RSVP button")
         ok("2374 Orchard Crest Blvd" in h and "5:00 – 9:00 PM" in h, "html: details")
         ok(link in clip["text"], "plain fallback has link")
+        ok("After many years of city-life, we are finally able to host Christmas for the family at our home!" in h and "kids" not in h.lower(), "html: new intro, no kids line")
+        ok("After many years of city-life, we are finally able to host Christmas for the family at our home!" in clip["text"] and "kids" not in clip["text"].lower(), "plain: new intro, no kids line")
         mt = await pg.evaluate("window.__mailto"); u = urllib.parse.urlsplit(mt); q = urllib.parse.parse_qs(u.query)
         print("mailto:", mt[:160], "…")
         ok(urllib.parse.unquote(u.path) == "elf.one@example.com,elf.two@example.org", "mailto To = both")
         ok(q["subject"][0] == "You're invited: Frank Family Christmas Eve 🎄", "mailto subject")
-        ok(link in q["body"][0], "mailto body has link")
+        ok(link in q["body"][0] and "After many years of city-life" in q["body"][0] and "kids" not in q["body"][0].lower(), "mailto body has link + new intro")
         await pg.wait_for_timeout(1500)
         ok("✅" in await (await row(pg, TEST)).locator("td.mailed").inner_text(), "emailed flag shown")
         # eml
@@ -93,7 +95,7 @@ async def main():
         ok(any(x.get_content_type() == "multipart/related" for x in parts) and img and html, "eml multipart/related with html+jpeg")
         cid = img[0]["Content-ID"].strip("<>"); ok(f'src="cid:{cid}"' in html[0].get_content(), "eml html uses inline cid image")
         ok(len(img[0].get_content()) == os.path.getsize("docs/images/invite-card.jpg"), "eml image bytes intact")
-        ok(link in html[0].get_content(), "eml html has personal link")
+        ok(link in html[0].get_content() and "After many years of city-life" in html[0].get_content() and "kids" not in html[0].get_content().lower(), "eml html has personal link + new intro")
         open("/tmp/email-render.html", "w").write(h)
         # email-all queue
         await pg.click("#emailAll"); await pg.wait_for_timeout(400); qn = await pg.inner_text("#qName")
@@ -108,7 +110,7 @@ async def main():
         ep = await ctx.new_page(); await ep.set_viewport_size({"width": 700, "height": 900})
         await ep.set_content(f'<body style="margin:0;background:#f2f2f2"><div style="background:#fff;margin:20px auto;padding:24px;max-width:620px"><div style="font:13px Arial;color:#666;border-bottom:1px solid #ddd;padding-bottom:10px;margin-bottom:16px"><b>To:</b> elf.one@example.com, elf.two@example.org<br><b>Subject:</b> You\'re invited: Frank Family Christmas Eve 🎄</div>{h.replace(PUB + "images/invite-card.jpg", BASE + "images/invite-card.jpg")}</div></body>')
         await ep.wait_for_load_state("networkidle"); await ep.wait_for_timeout(800)
-        await ep.screenshot(path=f"{SS}/30-email-render.png", full_page=True)
+        await ep.screenshot(path=f"{SS}/33-email-render.png", full_page=True)
         # mobile dashboard
         mob = await b.new_context(viewport={"width": 390, "height": 844}, device_scale_factor=2, is_mobile=True, has_touch=True)
         mp = await mob.new_page(); await mp.goto(BASE + "admin.html#k=" + KEY); await mp.wait_for_selector("#hq:not([hidden])", timeout=20000); await mp.wait_for_timeout(1500)
