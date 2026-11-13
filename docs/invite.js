@@ -1,7 +1,8 @@
-import { db, withTimeout, mountCountdown, calendarLinks, esc, PARTY, hasAddress } from "./shared.js";
-import { music } from "./music.js";
+import { db, withTimeout, mountCountdown, calendarLinks, esc, PARTY, hasAddress } from "./shared.js?v=20261112202119";
+import { music } from "./music.js?v=20261112202119";
 import { doc, getDoc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 
+const BUILD = "20261112202119"; // set by tools/bump_version.py (cache-busting for JSON + images)
 const $ = (s) => document.querySelector(s);
 const params = new URLSearchParams(location.hash.slice(1) || location.search.slice(1));
 const token = (params.get("t") || params.get("g") || "").trim();
@@ -84,11 +85,11 @@ function revealObserver() {
 /* ---------------- slideshow ---------------- */
 (async () => {
   let photos = [];
-  try { photos = await (await fetch("images/photos/photos.json", { cache: "no-cache" })).json(); } catch {}
+  try { photos = await (await fetch(`images/photos/photos.json?v=${BUILD}`, { cache: "no-cache" })).json(); } catch {}
   if (!photos.length) { $("#photos").remove(); return; }
   const slides = $("#slides"), dots = $("#slDots"); let i = 0, t;
   photos.forEach((p, k) => {
-    slides.insertAdjacentHTML("beforeend", `<div class="slide"><img src="images/photos/${encodeURI(p.file)}" alt="${esc(p.caption || "")}" loading="${k ? "lazy" : "eager"}"></div>`);
+    slides.insertAdjacentHTML("beforeend", `<div class="slide"><img src="images/photos/${encodeURI(p.file)}?v=${BUILD}" alt="${esc(p.caption || "")}" loading="${k ? "lazy" : "eager"}"></div>`);
     const d = document.createElement("button"); d.setAttribute("aria-label", `Photo ${k + 1}`); d.onclick = () => go(k, true); dots.appendChild(d);
   });
   const go = (k, user) => { i = (k + photos.length) % photos.length;
@@ -128,12 +129,12 @@ const earsSVG = `<svg class="elf-ears" viewBox="0 0 106 30" aria-hidden="true"><
 const MOVES = ["m-bounce", "m-twist", "m-kick", "m-wave"];
 (async () => {
   let faces = [];
-  try { faces = await (await fetch("images/faces/faces.json", { cache: "no-cache" })).json(); } catch {}
+  try { faces = await (await fetch(`images/faces/faces.json?v=${BUILD}`, { cache: "no-cache" })).json(); } catch {}
   if (!faces.length) faces = [{ file: "", name: "Elf" }];
   const row = $("#elfRow");
   faces.slice(0, 12).forEach((f, k) => {
     const b = document.createElement("button"); b.className = "elf"; b.setAttribute("aria-label", `${f.name} the elf — tap to show off`);
-    b.innerHTML = `<div class="elf-in">${elfSVG(k)}<div class="elf-head">${earsSVG}<img src="images/faces/${encodeURI(f.file)}" alt="">${hatSVG(k)}</div></div><span class="elf-name">${esc(f.name)}</span>`;
+    b.innerHTML = `<div class="elf-in">${elfSVG(k)}<div class="elf-head">${earsSVG}<img src="images/faces/${encodeURI(f.file)}?v=${BUILD}" alt="">${hatSVG(k)}</div></div><span class="elf-name">${esc(f.name)}</span>`;
     b.addEventListener("click", () => { b.classList.remove("showoff"); void b.offsetWidth; b.classList.add("showoff");
       const host = b.querySelector(".elf-in"); host.addEventListener("animationend", () => b.classList.remove("showoff"), { once: true }); });
     row.appendChild(b);
@@ -142,7 +143,7 @@ const MOVES = ["m-bounce", "m-twist", "m-kick", "m-wave"];
     MOVES.forEach((m) => el.classList.remove(m)); el.classList.add(MOVES[Math.floor(Math.random() * MOVES.length)]);
     el.querySelectorAll(".elf-in,.elf-head,.arm,.leg").forEach((p) => p.style.animationDelay = `${-(k * 0.13)}s`); });
   shuffle(); $("#newMoves").onclick = shuffle;
-  $("#discoBtn").onclick = (e) => { const on = $("#stage").classList.toggle("disco"); e.currentTarget.textContent = on ? "🌙 Normal lights" : "🪩 Disco mode"; };
+  $("#discoBtn").onclick = (e) => { const on = $("#stage").classList.toggle("disco-on"); e.currentTarget.textContent = on ? "🌙 Normal lights" : "🪩 Disco mode"; };
 })();
 
 /* ---------------- RSVP ---------------- */

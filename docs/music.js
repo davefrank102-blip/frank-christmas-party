@@ -47,8 +47,10 @@ function setup(ctx) {
     for (let c = 0; c < 2; c++) { const d = b.getChannelData(c);
       for (let k = 0; k < n; k++) { const t0 = env ? Math.random() * spread : Math.pow(Math.random(), 1.8) * spread;
         const s0 = Math.floor(t0 * ac.sampleRate), a = (.5 + Math.random() * .5) * (env ? env(t0) : 1);
-        for (let p = 0; p < 3; p++) { const f = 3800 + Math.random() * 6200, tau = .02 + Math.random() * .05, ph = Math.random() * 6.28;
-          for (let i = 0; s0 + i < d.length && i < tau * 6 * ac.sampleRate; i++) d[s0 + i] += a * .18 * Math.sin(ph + 6.2832 * f * i / ac.sampleRate) * Math.exp(-i / (tau * ac.sampleRate)); } } }
+        for (let p = 0; p < 3; p++) { const f = 3800 + Math.random() * 6200, tau = .02 + Math.random() * .05, sr = ac.sampleRate;
+          // damped sinusoid via a 2-pole resonator (no sin/exp per sample -> fast enough to run inside the tap on a phone)
+          const w = 6.2832 * f / sr, r = Math.exp(-1 / (tau * sr)), c1 = 2 * r * Math.cos(w), c2 = -r * r, n = Math.min(d.length - s0, Math.ceil(tau * 4.5 * sr));
+          let y1 = a * .18 * Math.sin(w), y2 = 0; for (let i = 0; i < n; i++) { d[s0 + i] += y1; const y = c1 * y1 + c2 * y2; y2 = y1; y1 = y; } } } }
     return b; };
   sleighBufs = [0, 1, 2].map(() => jingleBuf(.32, 26, .045));
   longShake = jingleBuf(1.8, 260, 1.4, (t) => (.55 + .45 * Math.sin(t * 6.2832 * 7)) * Math.min(1, t * 6) * (1 - t / 1.4));
@@ -165,17 +167,39 @@ function revealHit(t) {
 }
 const INTRO_LEN = 2.6; // music downbeat lands as the cheering fades
 
+/** play one silent sample — the classic iOS WebAudio unlock (must be inside a user gesture) */
+let silentEl;
+/** iOS mutes WebAudio when the ring/silent switch is on. A looping silent HTML <audio> element (started inside the tap)
+    plus navigator.audioSession = "playback" (iOS 17+) moves the page to the media channel so the music is heard. */
+function mediaChannel() {
+  try { if (navigator.audioSession) navigator.audioSession.type = "playback"; } catch {}
+  try { if (!silentEl) { const n = 4410, b = new ArrayBuffer(44 + n * 2), v = new DataView(b), w = (o, t) => [...t].forEach((c, i) => v.setUint8(o + i, c.charCodeAt(0)));
+      w(0, "RIFF"); v.setUint32(4, 36 + n * 2, true); w(8, "WAVEfmt "); v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
+      v.setUint32(24, 44100, true); v.setUint32(28, 88200, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true); w(36, "data"); v.setUint32(40, n * 2, true);
+      silentEl = new Audio(URL.createObjectURL(new Blob([b], { type: "audio/wav" }))); silentEl.loop = true; silentEl.setAttribute("playsinline", ""); silentEl.volume = 0.01; }
+    const p = silentEl.play(); if (p) p.catch(() => {}); } catch {} }
+function unlock() { mediaChannel(); try { const b = ac.createBuffer(1, 1, 22050), s = ac.createBufferSource(); s.buffer = b; s.connect(ac.destination); s.start(0); } catch {} }
+/** iOS can put the context into "interrupted" (calls, Siri, app switch) or "suspended": resume on the next tap / return to the page */
+function watchState() {
+  const kick = () => { if (on && ac && ac.state !== "running") { unlock(); ac.resume().catch(() => {}); } };
+  ac.onstatechange = () => { if (on && ac.state !== "running") document.addEventListener("touchend", kick, { once: true }); };
+  ["touchend", "click"].forEach((e) => document.addEventListener(e, kick, { passive: true }));
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) kick(); });
+}
 function fade(to, sec) { const now = ac.currentTime; out.gain.cancelScheduledValues(now); out.gain.setValueAtTime(out.gain.value, now); out.gain.linearRampToValueAtTime(to, now + sec); }
 
 export const music = {
   get on() { return on; },
   /** start (from a tap). withHit = play the reveal bell first */
   start(withHit = false) {
-    if (!ac) setup(); ac.resume(); if (on) return true; on = true; fade(MIX.master, .15);
+    // iOS Safari: everything here runs synchronously inside the tap handler — create, unlock, resume, no awaits.
+    if (!ac) { setup(); watchState(); }
+    unlock(); if (ac.state !== "running") ac.resume().catch(() => {});
+    if (on) return true; on = true; fade(MIX.master, .15);
     const t = ac.currentTime + .06; if (withHit) revealHit(t);
     bar = 0; barT = t + (withHit ? INTRO_LEN : 0); clearInterval(timer); timer = setInterval(sched, 120); sched(); return true; },
   stop() { if (!ac || !on) return false; on = false; clearInterval(timer); fade(0, .35);
-    setTimeout(() => { if (!on) ac.suspend(); }, 450); return false; },
+    setTimeout(() => { if (!on) { ac.suspend(); silentEl && silentEl.pause(); } }, 450); return false; },
   toggle() { return on ? this.stop() : this.start(); },
   /** test helper: render `sec` seconds offline (reveal hit + song); returns {peak, rms, wav: Float32Array[]} */
   async render(sec = 24) {

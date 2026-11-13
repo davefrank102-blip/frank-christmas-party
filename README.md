@@ -25,3 +25,6 @@ Add / rename / remove households and copy their personal links from the dashboar
 - `invites/{token}`: anyone can GET a doc only by knowing its token; LIST is denied. Guests can change only status/adults/kids/note (validated), nothing else.
 - `hosts/<host-key>/guests/{token}`: host index; the host key is hard-coded into the deployed rules (template: `firestore.rules.tmpl`, real key is substituted at deploy time and never committed).
 - Deploy rules: `sed "s/__ADMIN__/$(cat .admin_secret)/g" firestore.rules.tmpl > firestore.rules && firebase deploy --only firestore:rules --project frank-xmas-2026`
+
+## Publishing changes
+Run `python3 tools/bump_version.py` before every commit/push. It stamps a build id onto every JS/CSS/JSON/image URL (cache-busting) and writes `docs/version.json`; pages that loaded a stale cached copy refresh themselves once.

@@ -12,7 +12,9 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎄</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Mountains+of+Christmas:wght@700&family=Nunito:wght@400;600;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="invite.css">
+<link rel="stylesheet" href="invite.css?v=20261112202119">
+
+<script id="buildcheck">window.BUILD="20261112202119";fetch("version.json?"+Date.now(),{cache:"no-store"}).then(r=>r.json()).then(j=>{if(j.v!==window.BUILD&&sessionStorage.getItem("xmas-reloaded")!==j.v){sessionStorage.setItem("xmas-reloaded",j.v);return fetch(location.pathname,{cache:"reload"}).then(()=>location.reload())}}).catch(()=>{})</script>
 </head>
 <body>
 <canvas id="snow" aria-hidden="true"></canvas>
@@ -63,7 +65,7 @@
     <h2>The Elf Dance-Off 💃🕺</h2>
     <p class="sub">Look who's been practicing their moves for Christmas Eve…</p>
     <div class="stage" id="stage">
-      <div class="disco" aria-hidden="true"></div>
+      <div class="disco-lights" aria-hidden="true"></div><div class="disco-ball" aria-hidden="true"></div>
       <div class="elf-row" id="elfRow"></div>
       <div class="stage-floor" aria-hidden="true"></div>
     </div>
@@ -107,6 +109,6 @@
   <footer class="foot">Made with ❤️ and a little elf magic · <span id="footHosts"></span></footer>
 </main>
 
-<script type="module" src="invite.js"></script>
+<script type="module" src="invite.js?v=20261112202119"></script>
 </body>
 </html>

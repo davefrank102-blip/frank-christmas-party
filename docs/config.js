@@ -9,7 +9,7 @@ export const PARTY = {
   end: "2026-12-24T21:00:00-05:00",
   timeText: "Thursday, December 24 · 4:00 – 9:00 PM",
   // >>> ADDRESS: replace "TBD" with the real street address, e.g. "123 Main St, Manasquan, NJ 08736"
-  address: "TBD",
+  address: "2374 Orchard Crest Blvd, Manasquan, NJ 08736",
   areaText: "Manasquan, NJ",
   details: "Food, drinks, cookies, carols and plenty of Christmas cheer. Kids very welcome!",
   rsvpBy: "Please RSVP by December 15",
