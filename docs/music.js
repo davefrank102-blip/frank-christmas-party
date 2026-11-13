@@ -29,8 +29,9 @@ const SONG = [...CHORUS.map((m, i) => [m, CHORUS_CH[i], "chorus"]), ...VERSE.map
   ...CHORUS.map((m, i) => [m, CHORUS_CH[i], "chorus2"])];
 const FIFTH = { C: "G2", F: "C3", G: "D3", G7: "D3", D7: "A2", Am: "E3", Dm: "A2" };
 
-export const MIX = { glock: 1.6, celesta: 3.2, tubular: 1.2, sleigh: .11, bass: .35, stab: 1.6, pad: 1.4, burst: 1.7, master: .85 };
+export const MIX = { glock: 1.6, celesta: 3.2, tubular: 1.2, sleigh: .11, bass: .35, stab: 1.6, pad: 1.4, burst: 1.7, master: .85, drums: .24, dbass: .26, dstr: 1.1, dlead: 1.25 };
 let ac, out, wet, comp, sleighBufs = [], longShake, timer, on = false, bar = 0, barT = 0;
+let BUS = {}, cur = null, track = "xmas"; // per-track dry+reverb buses so tracks can crossfade
 
 function setup(ctx) {
   ac = ctx || new (window.AudioContext || window.webkitAudioContext)();
@@ -42,6 +43,9 @@ function setup(ctx) {
   for (let c = 0; c < 2; c++) { const d = ir.getChannelData(c); let lp = 0;
     for (let i = 0; i < len; i++) { lp += ((Math.random() * 2 - 1) - lp) * .35; d[i] = lp * Math.pow(1 - i / len, 3.2); } }
   const cv = ac.createConvolver(); cv.buffer = ir; wet = ac.createGain(); wet.gain.value = .55; wet.connect(cv).connect(out);
+  BUS = {}; for (const k of ["xmas", "disco"]) { const dry = ac.createGain(), w = ac.createGain(); dry.connect(out); w.connect(wet);
+    dry.gain.value = w.gain.value = k === track ? 1 : 0; BUS[k] = { dry, wet: w }; }
+  cur = BUS[track];
   // sleigh bells: clusters of tiny metallic jingles, rendered once to buffers
   const jingleBuf = (dur, n, spread, env) => { const b = ac.createBuffer(2, ac.sampleRate * dur, ac.sampleRate);
     for (let c = 0; c < 2; c++) { const d = b.getChannelData(c);
@@ -57,7 +61,7 @@ function setup(ctx) {
 }
 
 const pan = (node, p) => { if (!ac.createStereoPanner) return node; const s = ac.createStereoPanner(); s.pan.value = p; node.connect(s); return s; };
-const route = (node, dry, send) => { const g = ac.createGain(), w = ac.createGain(); g.gain.value = dry; w.gain.value = send; node.connect(g).connect(out); node.connect(w).connect(wet); };
+const route = (node, dry, send) => { const g = ac.createGain(), w = ac.createGain(); g.gain.value = dry; w.gain.value = send; node.connect(g).connect(cur.dry); node.connect(w).connect(cur.wet); };
 function partial(f, t, g, dec, dst, type = "sine") {
   const o = ac.createOscillator(), v = ac.createGain(); o.type = type; o.frequency.value = f;
   v.gain.setValueAtTime(0, t); v.gain.linearRampToValueAtTime(g, t + .003); v.gain.setTargetAtTime(0, t + .003, dec / 4);
@@ -107,9 +111,68 @@ function playBar(k, t) {
   if (phrase) tubular(M(c[0].replace(/\d$/, "4")), t, .6, 3.5);
 }
 
-function sched() { while (barT < ac.currentTime + .35) {
+function sched() { cur = BUS[track]; while (barT < ac.currentTime + .35) {
+    if (track === "disco") { playDiscoBar(bar, barT); barT += 4 * DBEAT; bar++; continue; }
     playBar(bar, barT); barT += 4 * BEAT; bar++;
     if (bar % SONG.length === 0) barT += 2 * BEAT; } }
+
+/* =====================================================================
+   DISCO MODE track: "Deck the Halls" (traditional Welsh carol, public domain) as a 120 BPM disco remix —
+   four-on-the-floor kick, open hats on the offbeats, claps on 2 & 4, octave funk bass, string stabs,
+   synth-brass + glockenspiel lead and sleigh-bell 16ths. Entirely synthesized; nothing from any modern song.
+   ===================================================================== */
+const DBEAT = 60 / 120;
+const DA = ["G5:1.5 F5:.5 E5:1 D5:1", "C5:1 D5:1 E5:1 C5:1", "D5:.5 E5:.5 F5:.5 D5:.5 E5:1.5 D5:.5", "C5:1 B4:1 C5:2"];
+const DECK = [...DA, ...DA,
+  "D5:1.5 E5:.5 F5:1 D5:1", "E5:1.5 F5:.5 G5:1 D5:1", "E5:.5 F#5:.5 G5:1 A5:.5 B5:.5 C6:1", "B5:1 A5:1 G5:2",
+  "G5:1.5 F5:.5 E5:1 D5:1", "C5:1 D5:1 E5:1 C5:1", "A5:.5 A5:.5 A5:.5 A5:.5 G5:1.5 F5:.5", "E5:1 D5:1 C5:2"];
+const DECK_CH = ["C", "C", "G7", "C", "C", "C", "G7", "C", "G", "Am", "D7", "G", "C", "C", "F", "G7"];
+const DROOT = { C: "C2", F: "F2", G: "G2", G7: "G2", D7: "D2", Am: "A2", Dm: "D2" };
+function kick(t, v = 1) { const o = ac.createOscillator(), g = ac.createGain(); o.frequency.setValueAtTime(155, t); o.frequency.exponentialRampToValueAtTime(48, t + .09);
+  env(g, t, [[.003, .95 * v * MIX.drums], [.28, 0]]); o.connect(g); route(g, 1, 0); o.start(t); o.stop(t + .32);
+  const n = noise(), hp = ac.createBiquadFilter(), ng = ac.createGain(); hp.type = "highpass"; hp.frequency.value = 3000; env(ng, t, [[.001, .25 * v * MIX.drums], [.012, 0]]);
+  n.connect(hp).connect(ng); route(ng, 1, 0); n.start(t); n.stop(t + .03); }
+function hat(t, open, v = 1) { const n = noise(), hp = ac.createBiquadFilter(), bp = ac.createBiquadFilter(), g = ac.createGain(); hp.type = "highpass"; hp.frequency.value = 7500;
+  bp.type = "peaking"; bp.frequency.value = 10000; bp.gain.value = 6; const d = open ? .2 : .04;
+  env(g, t, [[.002, (open ? .32 : .16) * v * MIX.drums], [d, 0]]); n.connect(hp).connect(bp).connect(g); route(pan(g, .25), .9, .1); n.start(t); n.stop(t + d + .02); }
+function clap(t, v = 1) { const n = noise(), bp = ac.createBiquadFilter(), g = ac.createGain(); bp.type = "bandpass"; bp.frequency.value = 1300; bp.Q.value = 1.1;
+  const a = .55 * v * MIX.drums; g.gain.setValueAtTime(0, t);
+  [0, .011, .022].forEach((o) => { g.gain.setValueAtTime(a, t + o); g.gain.linearRampToValueAtTime(a * .15, t + o + .009); });
+  g.gain.setValueAtTime(a * .8, t + .033); g.gain.setTargetAtTime(0, t + .034, .05); n.connect(bp).connect(g); route(g, .9, .4); n.start(t); n.stop(t + .35); }
+function fbass(f, t, d) { const o = ac.createOscillator(), o2 = ac.createOscillator(), lp = ac.createBiquadFilter(), v = ac.createGain();
+  o.type = "sawtooth"; o2.type = "square"; o.frequency.value = f; o2.frequency.value = f / 2 * 2; o2.detune.value = -6; lp.type = "lowpass"; lp.Q.value = 6;
+  lp.frequency.setValueAtTime(1600, t); lp.frequency.exponentialRampToValueAtTime(280, t + d * .9);
+  env(v, t, [[.005, .2 * MIX.dbass], [d * .8, .12 * MIX.dbass], [d, 0]]); o.connect(lp); o2.connect(lp); lp.connect(v); route(v, 1, .05); [o, o2].forEach((x) => { x.start(t); x.stop(t + d + .05); }); }
+function strings(notes, t, d, v = 1) { const lp = ac.createBiquadFilter(), g = ac.createGain(); lp.type = "lowpass"; lp.frequency.setValueAtTime(5200, t); lp.frequency.exponentialRampToValueAtTime(1400, t + d);
+  env(g, t, [[.01, .07 * v * MIX.dstr], [d * .7, .05 * v * MIX.dstr], [d, 0]]); lp.connect(g); route(pan(g, -.2), .8, .5);
+  notes.forEach((n) => [-9, 0, 9].forEach((det) => { const o = ac.createOscillator(); o.type = "sawtooth"; o.frequency.value = M(n); o.detune.value = det; o.connect(lp); o.start(t); o.stop(t + d + .05); })); }
+function brass(f, t, d) { const lp = ac.createBiquadFilter(), g = ac.createGain(); lp.type = "lowpass"; lp.Q.value = 2;
+  lp.frequency.setValueAtTime(900, t); lp.frequency.linearRampToValueAtTime(3800, t + .05); lp.frequency.setTargetAtTime(1800, t + .06, .15);
+  env(g, t, [[.02, .09 * MIX.dlead], [Math.max(.05, d * .85), .07 * MIX.dlead], [d + .05, 0]]); lp.connect(g); route(pan(g, .1), .8, .35);
+  [[ "sawtooth", -7], ["sawtooth", 7], ["square", 0]].forEach(([ty, det]) => { const o = ac.createOscillator(); o.type = ty; o.frequency.value = f; o.detune.value = det; o.connect(lp); o.start(t); o.stop(t + d + .1); }); }
+function playDiscoBar(k, t) {
+  const i = k % DECK.length, chord = DECK_CH[i], c = CH[chord], S = DBEAT / 4;
+  for (let q = 0; q < 4; q++) { const tq = t + q * DBEAT;
+    kick(tq); hat(tq + 2 * S, true); hat(tq, false, .6); hat(tq + S, false, .4); hat(tq + 3 * S, false, .45);
+    if (q % 2) clap(tq);
+    // octave bass: low root on the beat, octave up on the "and"
+    fbass(M(DROOT[chord]), tq, S * 1.6); fbass(M(DROOT[chord]) * 2, tq + 2 * S, S * 1.4); }
+  // string stabs on the "and" of 2 and on 4, plus a short swell into the next bar
+  strings(c.slice(1), t + 1.5 * DBEAT, S * 1.3); strings(c.slice(1), t + 3 * DBEAT, S * 1.3, .9);
+  if (i % 4 === 3) strings(c.slice(1).map((n) => n.replace(/\d$/, (o) => +o + 1)), t + 3.5 * DBEAT, S * 2, .7);
+  for (let e = 0; e < 16; e++) sleigh(t + e * S, e % 4 === 2 ? .7 : .35, e % 2 ? .35 : -.35);
+  // melody: synth brass + glockenspiel doubling (chorus half gets the extra sparkle)
+  let b = 0; for (const tok of DECK[i].split(" ")) { const [n, d] = tok.split(":"); if (n !== "-") { const f = M(n);
+      brass(f, t + b * DBEAT, +d * DBEAT * .92); glock(f * 2, t + b * DBEAT, i >= 8 ? .8 : .55); } b += +d; }
+  if (i === 0) tubular(M("C4"), t, .5, 3);
+}
+/** crossfade to another track ("xmas" | "disco"); respects mute (only switches what will play next) */
+function switchTrack(next) {
+  if (next === track) return; track = next; if (!ac || !on) { if (ac) for (const k in BUS) { BUS[k].dry.gain.value = BUS[k].wet.gain.value = k === track ? 1 : 0; } return; }
+  const now = ac.currentTime, X = 1.4;
+  for (const k in BUS) for (const g of [BUS[k].dry.gain, BUS[k].wet.gain]) { g.cancelScheduledValues(now); g.setValueAtTime(g.value, now); g.linearRampToValueAtTime(k === track ? 1 : 0, now + X); }
+  cur = BUS[track]; bar = 0; barT = now + .08; sched();
+}
 
 /* ---------------- party burst (all synthesized) ---------------- */
 let noiseBuf;
@@ -201,12 +264,16 @@ export const music = {
   stop() { if (!ac || !on) return false; on = false; clearInterval(timer); fade(0, .35);
     setTimeout(() => { if (!on) { ac.suspend(); silentEl && silentEl.pause(); } }, 450); return false; },
   toggle() { return on ? this.stop() : this.start(); },
+  get track() { return track; },
+  /** "disco" while Disco mode is on, "xmas" otherwise — crossfades if playing, never starts sound by itself */
+  setTrack(t) { switchTrack(t === "disco" ? "disco" : "xmas"); },
   /** test helper: render `sec` seconds offline (reveal hit + song); returns {peak, rms, wav: Float32Array[]} */
-  async render(sec = 24) {
-    const live = [ac, out, wet, comp, sleighBufs, longShake];
+  async render(sec = 24, which = "xmas") {
+    const live = [ac, out, wet, comp, sleighBufs, longShake, BUS, cur, track]; track = which;
     setup(new OfflineAudioContext(2, 44100 * sec, 44100)); out.gain.value = MIX.master;
-    revealHit(0); let k = 0, t = INTRO_LEN; while (t < sec) { playBar(k++, t); t += 4 * BEAT; }
-    const buf = await ac.startRendering(); [ac, out, wet, comp, sleighBufs, longShake] = live;
+    if (which === "disco") { let k = 0, t = 0; while (t < sec) { playDiscoBar(k++, t); t += 4 * DBEAT; } }
+    else { revealHit(0); let k = 0, t = INTRO_LEN; while (t < sec) { playBar(k++, t); t += 4 * BEAT; } }
+    const buf = await ac.startRendering(); [ac, out, wet, comp, sleighBufs, longShake, BUS, cur, track] = live;
     const L = buf.getChannelData(0), R = buf.getChannelData(1); let peak = 0, sum = 0;
     for (let i = 0; i < L.length; i++) { peak = Math.max(peak, Math.abs(L[i]), Math.abs(R[i])); sum += L[i] * L[i]; }
     return { peak, rms: Math.sqrt(sum / L.length), L, R };

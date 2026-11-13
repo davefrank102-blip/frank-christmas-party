@@ -1,9 +1,9 @@
-import { db, withTimeout, mountCountdown, calendarLinks, esc, PARTY, hasAddress } from "./shared.js?v=20261112203713";
-import { DANCES } from "./dances.js?v=20261112203713";
-import { music } from "./music.js?v=20261112203713";
+import { db, withTimeout, mountCountdown, calendarLinks, esc, PARTY, hasAddress } from "./shared.js?v=20261112204044";
+import { DANCES } from "./dances.js?v=20261112204044";
+import { music } from "./music.js?v=20261112204044";
 import { doc, getDoc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 
-const BUILD = "20261112203713"; // set by tools/bump_version.py (cache-busting for JSON + images)
+const BUILD = "20261112204044"; // set by tools/bump_version.py (cache-busting for JSON + images)
 const $ = (s) => document.querySelector(s);
 const params = new URLSearchParams(location.hash.slice(1) || location.search.slice(1));
 const token = (params.get("t") || params.get("g") || "").trim();
@@ -78,7 +78,14 @@ $("#replay").addEventListener("click", (e) => { e.preventDefault(); location.has
 mountCountdown($("#countdown"));
 const cal = calendarLinks(); $("#gcal").href = cal.google; $("#ics").href = cal.icsUrl;
 
-function revealObserver() {
+/* "scroll for more" cue: shown on the first screen after the intro, fades away once they scroll */
+function showScrollCue() {
+  const c = $("#scrollCue"); if (!c || scrollY > 40) return; c.hidden = false; c.classList.remove("gone");
+  const off = () => { if (scrollY > 40) { c.classList.add("gone"); removeEventListener("scroll", off); } };
+  addEventListener("scroll", off, { passive: true });
+  c.onclick = () => { const next = $("#photos") || $("#elves") || $("#rsvp"); next && next.scrollIntoView({ behavior: "smooth", block: "start" }); };
+}
+function revealObserver() { showScrollCue();
   const io = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); } }), { threshold: .12 });
   document.querySelectorAll(".reveal").forEach((el) => io.observe(el));
 }
@@ -158,7 +165,8 @@ function dance(el) {
     MOVES.forEach((m) => el.classList.remove(m)); el.classList.add(MOVES[Math.floor(Math.random() * MOVES.length)]);
     el.querySelectorAll(".elf-in,.elf-head,.arm,.leg,.fore").forEach((p) => p.style.animationDelay = `${-(k * 0.13)}s`); });
   shuffle(); $("#newMoves").onclick = shuffle;
-  $("#discoBtn").onclick = (e) => { const on = $("#stage").classList.toggle("disco-on"); e.currentTarget.textContent = on ? "🌙 Normal lights" : "🪩 Disco mode"; };
+  $("#discoBtn").onclick = (e) => { const on = $("#stage").classList.toggle("disco-on"); e.currentTarget.textContent = on ? "🌙 Normal lights" : "🪩 Disco mode";
+    music.setTrack(on ? "disco" : "xmas"); };
 })();
 
 /* ---------------- RSVP ---------------- */
